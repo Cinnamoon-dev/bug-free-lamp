@@ -20,6 +20,8 @@ class Database(ABC):
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
+        if exception_value is not None:
+            self.connection.rollback()
         self.cursor.close()
         self.connection.close()
 
