@@ -1,14 +1,11 @@
 import os
 import uvicorn
 from fastapi import FastAPI
+from src.controllers import userTypeController
 
 app = FastAPI(debug=True)
 
-
-@app.get("/")
-def main():
-    return {"message": "Hello, World!"}
-
+app.include_router(userTypeController.router)
 
 if __name__ == "__main__":
     uvicorn.run(
