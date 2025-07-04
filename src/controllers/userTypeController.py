@@ -15,7 +15,8 @@ def user_type_view(user_type_id: int):
 
 @router.post("/add")
 def user_type_add(user_type: UserTypeSchema):
-    return
+    response = UserTypeService().add(user_type)
+    return response
 
 @router.put("/edit/{user_type_id:int}")
 def user_type_edit(user_type_id: int):
