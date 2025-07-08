@@ -12,6 +12,8 @@ class UserTypeService:
         self.columns: list[str] = ["id", "nome"]
 
     def get_all(self) -> list[dict[str, Any]]:
+        # TODO
+        # pagination
         all_user_types = []
 
         with PgDatabase() as db:
@@ -22,17 +24,26 @@ class UserTypeService:
         
         return all_user_types
 
-    def add(self, user_type: UserTypeSchema) -> JSONResponse:
-        # TODO
-        # Make this generic
-        # table_name, list_of_columns, tuple_with_fields (in the list_of_columns order)
+    def view(self, user_type_id: int) -> JSONResponse:
+        user_type = None
 
+        with PgDatabase() as db:
+            db.cursor.execute(f"SELECT id, nome FROM {self.table} WHERE id = %s", (user_type_id,))
+            row = db.cursor.fetchone()
+
+            if row is None:
+                return JSONResponse(status_code=404, content={"error": True, "message": "Tipo de usuário não encontrado"})
+        
+        user_type = {"id": row[0], "nome": row[1]}
+        return JSONResponse(status_code=200, content={"error": False, "data": user_type})
+
+    def add(self, user_type: UserTypeSchema) -> JSONResponse:
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"INSERT INTO {self.table} (nome) VALUES (%s)", (user_type.nome,))
                 db.connection.commit()
-        except UniqueViolation:
-            return JSONResponse(status_code=400, content={"error": True, "message": f"Tipo de usuário com o nome {user_type.nome} já existe"})
+        except UniqueViolation as e:
+            return JSONResponse(status_code=400, content={"error": True, "message": str(e)})
         except Exception:
             return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
         
