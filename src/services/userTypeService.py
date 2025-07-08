@@ -49,3 +49,14 @@ class UserTypeService:
         
         return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário {user_type.nome} adicionado com sucesso."})
         
+    def edit(self, user_type_id: int, user_type: UserTypeSchema):
+        try:
+            with PgDatabase() as db:
+                db.cursor.execute(f"UPDATE {self.table} SET nome = %s WHERE id = %s", (user_type.nome, user_type_id))
+                db.connection.commit()
+        except UniqueViolation as e:
+            return JSONResponse(status_code=400, content={"error": True, "message": str(e)})
+        except Exception:
+            return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
+
+        return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário com id {user_type_id} editado com sucesso."})
