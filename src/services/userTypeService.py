@@ -11,7 +11,7 @@ class UserTypeService:
         self.table: str = "tipo_usuario"
         self.columns: list[str] = ["id", "nome"]
 
-    def get_all(self) -> list[dict[str, Any]]:
+    def all(self) -> list[dict[str, Any]]:
         # TODO
         # pagination
         all_user_types = []
@@ -49,7 +49,7 @@ class UserTypeService:
         
         return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário {user_type.nome} adicionado com sucesso."})
         
-    def edit(self, user_type_id: int, user_type: UserTypeSchema):
+    def edit(self, user_type_id: int, user_type: UserTypeSchema) -> JSONResponse:
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"UPDATE {self.table} SET nome = %s WHERE id = %s", (user_type.nome, user_type_id))
@@ -60,3 +60,12 @@ class UserTypeService:
             return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
 
         return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário com id {user_type_id} editado com sucesso."})
+    
+    def delete(self, user_type_id: int):
+        try:
+            with PgDatabase() as db:
+                db.cursor.execute(f"DELETE FROM {self.table} WHERE id = %s", (user_type_id,))
+        except Exception:
+            return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
+
+        return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário com id {user_type_id} deletado com sucesso."})
