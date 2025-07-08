@@ -20,8 +20,9 @@ def user_type_add(user_type: UserTypeSchema):
     return response
 
 @router.put("/{user_type_id:int}")
-def user_type_edit(user_type_id: int):
-    return
+def user_type_edit(user_type_id: int, user_type: UserTypeSchema):
+    response = UserTypeService().edit(user_type_id, user_type)
+    return response
 
 @router.delete("/{user_type_id:int}")
 def user_type_delete(user_type_id: int):
