@@ -61,7 +61,7 @@ class UserTypeService:
 
         return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário com id {user_type_id} editado com sucesso."})
     
-    def delete(self, user_type_id: int):
+    def delete(self, user_type_id: int) -> JSONResponse:
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"DELETE FROM {self.table} WHERE id = %s", (user_type_id,))
