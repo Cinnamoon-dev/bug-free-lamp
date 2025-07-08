@@ -7,11 +7,12 @@ router = APIRouter(prefix="/user/type", tags=["user type"])
 @router.get("/")
 def user_type_all():
     data = UserTypeService().get_all()
-    return {"data": data}
+    return {"error": False, "data": data}
 
 @router.get("/{user_type_id:int}")
 def user_type_view(user_type_id: int):
-    return
+    response = UserTypeService().view(user_type_id)
+    return response
 
 @router.post("/")
 def user_type_add(user_type: UserTypeSchema):
