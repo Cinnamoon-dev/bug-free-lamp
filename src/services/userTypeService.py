@@ -40,14 +40,15 @@ class UserTypeService:
     def add(self, user_type: UserTypeSchema) -> JSONResponse:
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"INSERT INTO {self.table} (nome) VALUES (%s)", (user_type.nome,))
+                db.cursor.execute(f"INSERT INTO {self.table} (nome) VALUES (%s) RETURNING id", (user_type.nome,))
+                inserted_id = db.cursor.fetchone()[0]
                 db.connection.commit()
         except UniqueViolation as e:
             return JSONResponse(status_code=400, content={"error": True, "message": str(e)})
         except Exception:
             return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
         
-        return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário {user_type.nome} adicionado com sucesso."})
+        return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário {user_type.nome} adicionado com sucesso.", "id": inserted_id})
         
     def edit(self, user_type_id: int, user_type: UserTypeSchema) -> JSONResponse:
         try:
