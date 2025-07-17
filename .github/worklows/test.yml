@@ -1,0 +1,21 @@
+name: Test CI Worklow
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  run_tests:
+    name: Testing stage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Start containers
+        run: docker compose -f compose.test.yaml up --build --abort-on-container-exit
+      
+      - name: Clean up
+        run: docker compose -f compose.test.yaml down --timeout 1
