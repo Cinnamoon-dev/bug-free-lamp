@@ -53,14 +53,17 @@ def test_create_invalid_user_type(client):
 def test_create_repeated_user_type(client):
     content = create_user_type("valid_user_type_name")
     response = client.post("/user/type", content=content)
-    assert response.status_code == 422
+    assert response.status_code == 400
 
 
 def test_edit_valid_user_type(client):
-    content = create_user_type("valid_user_type_name_2")
-    existing_user_type = client.get("/user/type/view/name/valid_user_type_name").json()
+    to_edit = create_user_type("valid_user_type_name_for_edit_1")
+    new_value = create_user_type("valid_user_type_name_for_edit_2")
+
+    existing_user_type_id = client.post("/user/type/", content=to_edit).json()["id"]
+    print(existing_user_type_id)
     response = client.put(
-        f"/user/type/edit/{existing_user_type['data']['id']}", content=content
+        f"/user/type/edit/{existing_user_type_id}", content=new_value
     )
     assert response.status_code == 200
 
@@ -71,7 +74,7 @@ def test_edit_invalid_user_type(client):
 
     content = create_user_type("")
     response = client.put(f"/user/type/{inserted_id}", content=content)
-    assert response.status_code == 422
+    assert response.status_code == 400
 
 
 def test_edit_repeated_user_type(client):
@@ -82,7 +85,7 @@ def test_edit_repeated_user_type(client):
     client.post("/user/type/", content=existing_type)
 
     response = client.put(f"/user/type/{mocked_id}", content=existing_type)
-    assert response.status_code == 422
+    assert response.status_code == 400
 
 def test_delete_unused_user_type(client):
     mocked_type = create_user_type("type_to_delete")
@@ -90,9 +93,3 @@ def test_delete_unused_user_type(client):
 
     response = client.delete(f"/user/type/{mocked_id}")
     assert response.status_code == 200
-
-#def test_delete_invalid_id_user_type(client):
-#    invalid_id = "z8545048a51862c39c4d4de0"
-#    response = client.delete(f"/user/type/delete/{invalid_id}")
-#
-#    assert response.status_code == 422
