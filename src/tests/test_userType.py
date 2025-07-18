@@ -51,7 +51,8 @@ def test_create_invalid_user_type(client):
 
 
 def test_create_repeated_user_type(client):
-    content = create_user_type("valid_user_type_name")
+    content = create_user_type("repeated_user_type")
+    response = client.post("/user/type", content=content)
     response = client.post("/user/type", content=content)
     assert response.status_code == 400
 
@@ -61,9 +62,8 @@ def test_edit_valid_user_type(client):
     new_value = create_user_type("valid_user_type_name_for_edit_2")
 
     existing_user_type_id = client.post("/user/type/", content=to_edit).json()["id"]
-    print(existing_user_type_id)
     response = client.put(
-        f"/user/type/edit/{existing_user_type_id}", content=new_value
+        f"/user/type/{existing_user_type_id}", content=new_value
     )
     assert response.status_code == 200
 
@@ -74,7 +74,7 @@ def test_edit_invalid_user_type(client):
 
     content = create_user_type("")
     response = client.put(f"/user/type/{inserted_id}", content=content)
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_edit_repeated_user_type(client):
