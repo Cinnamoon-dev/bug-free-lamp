@@ -16,11 +16,13 @@ FROM python:3.13-slim AS test
 
 WORKDIR /app
 
+RUN echo "#!/bin/bash\n/.venv/bin/python3 -m src.infra.database.populate\n/.venv/bin/python3 -m pytest" > /docker-entrypoint.sh
+
 COPY --from=build /build/.venv /.venv
 
 COPY . .
 
-CMD ["/.venv/bin/python3", "-m", "pytest"]
+CMD ["sh", "/docker-entrypoint.sh"]
 
 FROM python:3.13-slim AS runtime
 
