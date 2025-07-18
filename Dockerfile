@@ -16,7 +16,7 @@ FROM python:3.13-slim AS test
 
 WORKDIR /app
 
-RUN echo "#!/bin/bash\n/.venv/bin/python3 -m src.infra.database.populate\n/.venv/bin/python3 -m pytest" > /docker-entrypoint.sh
+RUN echo "#!/bin/bash\n/.venv/bin/python3 -m src.infra.database.populate &&\n/.venv/bin/python3 -m pytest" > /docker-entrypoint.sh
 
 COPY --from=build /build/.venv /.venv
 
