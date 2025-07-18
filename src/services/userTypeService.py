@@ -1,9 +1,11 @@
 from typing import Any
+from fastapi.datastructures import QueryParams
 from fastapi.responses import JSONResponse
 from psycopg2.errors import UniqueViolation
 
 from src.infra.database.database import PgDatabase
 from src.schemas.userTypeSchema import UserTypeSchema
+from src.services import paginate
 
 
 class UserTypeService:
@@ -11,18 +13,8 @@ class UserTypeService:
         self.table: str = "tipo_usuario"
         self.columns: list[str] = ["id", "nome"]
 
-    def all(self) -> list[dict[str, Any]]:
-        # TODO
-        # pagination
-        all_user_types = []
-
-        with PgDatabase() as db:
-            db.cursor.execute(f"SELECT id, nome FROM {self.table};")
-            rows = db.cursor.fetchall()
-
-            all_user_types = [{"id": row[0], "nome": row[1]} for row in rows]
-        
-        return all_user_types
+    def all(self, query_params: QueryParams) -> dict[str, Any]:
+        return paginate(self.table, self.columns, query_params)
 
     def view(self, user_type_id: int) -> JSONResponse:
         user_type = None
@@ -66,6 +58,7 @@ class UserTypeService:
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"DELETE FROM {self.table} WHERE id = %s", (user_type_id,))
+                db.connection.commit()
         except Exception:
             return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
 
