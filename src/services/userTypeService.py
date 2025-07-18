@@ -33,7 +33,12 @@ class UserTypeService:
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"INSERT INTO {self.table} (nome) VALUES (%s) RETURNING id", (user_type.nome,))
-                inserted_id = db.cursor.fetchone()[0]
+                raw_id = db.cursor.fetchone()
+
+                if raw_id is None:
+                    return JSONResponse(status_code=500, content={"error": True, "message": "Não foi possível inserir o tipo de usuário."})
+
+                inserted_id = raw_id[0]
                 db.connection.commit()
         except UniqueViolation as e:
             return JSONResponse(status_code=400, content={"error": True, "message": str(e)})

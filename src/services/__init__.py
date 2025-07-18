@@ -30,7 +30,12 @@ def paginate(table_name: str, columns: list[str], query_params: QueryParams) -> 
 
     with PgDatabase() as db:
         db.cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-        itens_count = db.cursor.fetchone()[0]
+        raw_count = db.cursor.fetchone()
+
+        if raw_count is None:
+            return {"error": True, "message": "Não foi possível fazer a query"}
+        
+        itens_count = raw_count[0]
 
         db.cursor.execute(f"SELECT {columns_string} FROM {table_name} LIMIT (%s) OFFSET (%s)", (rows_per_page, offset))
         lines = db.cursor.fetchall()
