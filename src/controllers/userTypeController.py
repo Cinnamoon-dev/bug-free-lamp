@@ -1,12 +1,16 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from src.services.userTypeService import UserTypeService
 from src.schemas.userTypeSchema import UserTypeSchema
 
 router = APIRouter(prefix="/user/type", tags=["user type"])
 
 @router.get("/")
-def user_type_all():
-    data = UserTypeService().all()
+def user_type_all(
+    request: Request,
+    page: int = 1,
+    rows_per_page: int = 10
+):
+    data = UserTypeService().all(request.query_params)
     return {"error": False, "data": data}
 
 @router.get("/{user_type_id:int}")
