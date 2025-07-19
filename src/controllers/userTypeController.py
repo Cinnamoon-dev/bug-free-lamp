@@ -10,8 +10,7 @@ def user_type_all(
     page: int = 1,
     rows_per_page: int = 10
 ):
-    data = UserTypeService().all(request.query_params)
-    return {"error": False, "data": data}
+    return UserTypeService().all(request.query_params)
 
 @router.get("/{user_type_id:int}")
 def user_type_view(user_type_id: int):
