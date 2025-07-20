@@ -12,6 +12,9 @@ def paginate(
     rows_per_page: int,
     sort: str | None
 ) -> dict[str, Any]:
+    # TODO
+    # Refactor: talvez receber a query e só adicionar o LIMIT, OFFSET E ORDER BY no final
+    # para poder mexer com qualquer query, como as que tem JOIN e etc
     if sort:
         sort_column, sort_order = sort.split(",")
 
