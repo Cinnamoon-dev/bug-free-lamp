@@ -1,11 +1,11 @@
 from typing import Any
-from fastapi.datastructures import QueryParams
 from fastapi.responses import JSONResponse
 from psycopg2.errors import UniqueViolation
+from fastapi.datastructures import QueryParams
 
+from src.services import paginate
 from src.infra.database.database import PgDatabase
 from src.schemas.userTypeSchema import UserTypeSchema
-from src.services import paginate
 
 
 class UserTypeService:

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request
-from src.services.userTypeService import UserTypeService
+
 from src.schemas.userTypeSchema import UserTypeSchema
+from src.services.userTypeService import UserTypeService
 
 router = APIRouter(prefix="/user/type", tags=["user type"])
 
