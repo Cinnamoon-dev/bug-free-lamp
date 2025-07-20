@@ -14,7 +14,10 @@ class UserTypeService:
         self.columns: list[str] = ["id", "nome"]
 
     def all(self, query_params: QueryParams) -> dict[str, Any]:
-        return paginate(self.table, self.columns, query_params)
+        page = int(query_params.get("page", 1))
+        rows_per_page = int(query_params.get("rows_per_page", 10))
+        sort = query_params.get("sort_by", None)
+        return paginate(self.table, self.columns, page, rows_per_page, sort)
 
     def view(self, user_type_id: int) -> JSONResponse:
         user_type = None

@@ -1,6 +1,5 @@
 import math
 from typing import Any
-from fastapi.datastructures import QueryParams
 
 from src.infra.database.database import PgDatabase
 from src.infra.database.serializers import lines_to_dict
@@ -9,12 +8,18 @@ from src.infra.database.serializers import lines_to_dict
 def paginate(
     table_name: str, 
     columns: list[str], 
-    query_params: QueryParams
+    page: int,
+    rows_per_page: int,
+    sort: str | None
 ) -> dict[str, Any]:
-    page = int(query_params.get("page", 1))
-    rows_per_page = int(query_params.get("rows_per_page", 10))
-    # TODO
-    # query_params.get("sort", "id|ASC")
+    if sort:
+        sort_column, sort_order = sort.split(",")
+
+        if sort_column not in columns:
+            raise ValueError("Coluna não identificada")
+        
+        if sort_order.lower() not in ["asc", "desc"]:
+            raise ValueError("Direção de ordenação não encontrada")
 
     if page < 1:
         page = 1
@@ -33,6 +38,8 @@ def paginate(
 
     data = []
 
+    # TODO
+    # Tratar exceptions aqui
     with PgDatabase() as db:
         db.cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
         raw_count = db.cursor.fetchone()
@@ -42,9 +49,13 @@ def paginate(
         
         itens_count = raw_count[0]
 
-        db.cursor.execute(f"SELECT {columns_string} FROM {table_name} LIMIT (%s) OFFSET (%s)", (rows_per_page, offset))
-        lines = db.cursor.fetchall()
+        if sort:
+            sort_column, sort_order = sort.split(",")
+            db.cursor.execute(f"SELECT {columns_string} FROM {table_name} ORDER BY {sort_column} {sort_order} LIMIT %s OFFSET %s", (rows_per_page, offset))
+        else:
+            db.cursor.execute(f"SELECT {columns_string} FROM {table_name} LIMIT %s OFFSET %s", (rows_per_page, offset))
 
+        lines = db.cursor.fetchall()
         data = lines_to_dict(lines, columns)
 
     pages_count = math.ceil(itens_count / rows_per_page)
