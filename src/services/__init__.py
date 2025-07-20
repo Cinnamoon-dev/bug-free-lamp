@@ -3,9 +3,14 @@ from typing import Any
 from fastapi.datastructures import QueryParams
 
 from src.infra.database.database import PgDatabase
+from src.infra.database.serializers import lines_to_dict
 
 
-def paginate(table_name: str, columns: list[str], query_params: QueryParams) -> dict[str, Any]:
+def paginate(
+    table_name: str, 
+    columns: list[str], 
+    query_params: QueryParams
+) -> dict[str, Any]:
     page = int(query_params.get("page", 1))
     rows_per_page = int(query_params.get("rows_per_page", 10))
     # TODO
@@ -40,11 +45,7 @@ def paginate(table_name: str, columns: list[str], query_params: QueryParams) -> 
         db.cursor.execute(f"SELECT {columns_string} FROM {table_name} LIMIT (%s) OFFSET (%s)", (rows_per_page, offset))
         lines = db.cursor.fetchall()
 
-        for line in lines:
-            current_line_dict = {}
-            for index, column in enumerate(columns):
-                current_line_dict[column] = line[index]
-            data.append(current_line_dict)
+        data = lines_to_dict(lines, columns)
 
     pages_count = math.ceil(itens_count / rows_per_page)
 
