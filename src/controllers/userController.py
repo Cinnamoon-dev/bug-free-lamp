@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Request
 
+from src.schemas.userSchema import UserAddSchema, UserEditSchema
+
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -17,11 +19,11 @@ def user_view(user_id: int):
     return
 
 @router.post("/")
-def user_add(user):
+def user_add(user: UserAddSchema):
     return
 
 @router.put("/{user_id:int}")
-def user_edit(user_id: int, user):
+def user_edit(user_id: int, user: UserEditSchema):
     return
 
 @router.delete("/{user_id:int}")
