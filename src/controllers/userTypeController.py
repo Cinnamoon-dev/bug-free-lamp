@@ -9,7 +9,8 @@ router = APIRouter(prefix="/user/type", tags=["user type"])
 def user_type_all(
     request: Request,
     page: int = 1,
-    rows_per_page: int = 10
+    rows_per_page: int = 10,
+    sort_by: str | None = None
 ):
     return UserTypeService().all(request.query_params)
 
