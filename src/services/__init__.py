@@ -15,7 +15,7 @@ def paginate(
     # TODO
     # Refactor: talvez receber a query e só adicionar o LIMIT, OFFSET E ORDER BY no final
     # para poder mexer com qualquer query, como as que tem JOIN e etc
-    if sort:
+    if sort is not None:
         sort_column, sort_order = sort.split(",")
 
         if sort_column not in columns:
@@ -33,7 +33,7 @@ def paginate(
     prev_page = page - 1
     if prev_page < 1:
         prev_page = None
-    
+
     next_page = page + 1
 
     offset = (page - 1) * rows_per_page
@@ -62,6 +62,9 @@ def paginate(
         data = lines_to_dict(lines, columns)
 
     pages_count = math.ceil(itens_count / rows_per_page)
+    
+    if pages_count in [0, 1]:
+        next_page = None
 
     return {
         "itens": data,
