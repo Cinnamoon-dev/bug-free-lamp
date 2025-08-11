@@ -12,8 +12,10 @@ def retrieve_table_columns(table_name: str)-> list[str]:
         output (list[str]): A list containing the names of the columns in the specified table.
 
     Example:
+        ```python
         columns = get_table_columns("users")
         # columns -> ["id", "email", "created_at"]
+        ```
     """
     with PgDatabase() as db:
         db.cursor.execute(
