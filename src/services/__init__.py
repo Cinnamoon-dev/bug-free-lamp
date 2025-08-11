@@ -6,23 +6,26 @@ from src.infra.database.serializers import lines_to_dict
 
 
 def paginate(
-    table_name: str, 
-    columns: list[str], 
+    query: str,
     page: int,
     rows_per_page: int,
     sort: str | None
 ) -> dict[str, Any]:
-    # TODO
-    # Refactor: talvez receber a query e só adicionar o LIMIT, OFFSET E ORDER BY no final
-    # para poder mexer com qualquer query, como as que tem JOIN e etc
-    if sort is not None:
-        sort_column, sort_order = sort.split(",")
+    """
+    Paginates the results of an SQL query.
 
-        if sort_column not in columns:
-            raise ValueError("Coluna não identificada")
-        
-        if sort_order.lower() not in ["asc", "desc"]:
-            raise ValueError("Direção de ordenação não encontrada")
+    Args:
+        query (str): Base SQL query, without semicolon (;).
+        page (int): Current page number (starting from 1).
+        rows_per_page (int): Number of items per page.
+        sort (str | None): Column and order for sorting, in the format "column,order".
+
+    Returns:
+        output (dict[str, Any]): Dictionary containing paginated items, pagination information, and error status.
+
+    Raises:
+        Exception: If an error occurs during query execution.
+    """
 
     if page < 1:
         page = 1
@@ -35,31 +38,36 @@ def paginate(
         prev_page = None
 
     next_page = page + 1
-
     offset = (page - 1) * rows_per_page
-    columns_string = str(columns).strip("[]").replace("'", "")
+    count_query = query
 
+    if sort is not None:
+        sort_column, sort_order = sort.split(",")
+        query = query + f" ORDER BY {sort_column} {sort_order.upper()}"
+
+    query = query + " LIMIT %s OFFSET %s"
     data = []
 
-    # TODO
-    # Tratar exceptions aqui
-    with PgDatabase() as db:
-        db.cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
-        raw_count = db.cursor.fetchone()
+    try:
+        with PgDatabase() as db:
+            db.cursor.execute(f"SELECT COUNT(*) FROM ({count_query}) AS subquery")
+            raw_count = db.cursor.fetchone()
 
-        if raw_count is None:
-            return {"error": True, "message": "Não foi possível fazer a query"}
-        
-        itens_count = raw_count[0]
+            if raw_count is None:
+                return {"error": True, "message": "Não foi possível fazer a query"}
+            
+            itens_count = raw_count[0]
 
-        if sort:
-            sort_column, sort_order = sort.split(",")
-            db.cursor.execute(f"SELECT {columns_string} FROM {table_name} ORDER BY {sort_column} {sort_order} LIMIT %s OFFSET %s", (rows_per_page, offset))
-        else:
-            db.cursor.execute(f"SELECT {columns_string} FROM {table_name} LIMIT %s OFFSET %s", (rows_per_page, offset))
+            db.cursor.execute(query, (rows_per_page, offset))
 
-        lines = db.cursor.fetchall()
-        data = lines_to_dict(lines, columns)
+            if db.cursor.description is None:
+                return {"error": True, "message": "Não foi possível retonar a descrição das colunas"}
+
+            columns = [desc[0] for desc in db.cursor.description]
+            lines = db.cursor.fetchall()
+            data = lines_to_dict(lines, columns)
+    except Exception:
+        return {"error": True, "message": "Database error"}
 
     pages_count = math.ceil(itens_count / rows_per_page)
     
