@@ -4,13 +4,14 @@ from fastapi.datastructures import QueryParams
 
 from src.services import paginate
 from src.infra.database.database import PgDatabase
+from src.infra.database import retrieve_table_columns
 from src.schemas.userTypeSchema import UserTypeSchema
 
 
 class UserTypeService:
     def __init__(self) -> None:
         self.table: str = "tipo_usuario"
-        self.columns: list[str] = ["id", "nome"]
+        self.columns: list[str] = retrieve_table_columns(self.table)
 
     def all(self, query_params: QueryParams) -> JSONResponse:
         query = f"SELECT id, nome FROM {self.table}"
