@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request
 
+from src.services.userService import UserService
 from src.schemas.userSchema import UserAddSchema, UserEditSchema
 
 
@@ -20,7 +21,7 @@ def user_view(user_id: int):
 
 @router.post("/")
 def user_add(user: UserAddSchema):
-    return
+    return UserService().add(user)
 
 @router.put("/{user_id:int}")
 def user_edit(user_id: int, user: UserEditSchema):
