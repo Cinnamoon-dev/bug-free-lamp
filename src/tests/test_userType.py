@@ -9,8 +9,10 @@ from main import app
 # Criar um tipo de usuario com uma string vazia
 # Criar um tipo de usuario com um nome ja existente
 # ----------------------------------------------------
-# Ver um tipo de usuário enviando um id inválido
-# Ver um tipo de usuário enviando um id válido
+# TODO
+# Ver um tipo de usuário enviando um id cadastrado no banco
+# TODO
+# Ver um tipo de usuário enviando um id não cadastrado no banco
 # ----------------------------------------------------
 # Editar um tipo de usuario com o corpo da requisição vazio
 # Editar um tipo de usuario com o corpo nulo
@@ -19,6 +21,7 @@ from main import app
 # Editar um tipo de usuario para um nome ja existente
 # ----------------------------------------------------
 # Deletar um tipo de usuario que nao esta sendo usado
+# TODO
 # Deletar um tipo de usuario que esta sendo usado
 # Deletar um tipo de usuario que nao existe
 # ----------------------------------------------------
