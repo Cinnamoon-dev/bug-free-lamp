@@ -6,6 +6,7 @@ from src.services import paginate
 from src.infra.database.database import PgDatabase
 from src.infra.database import retrieve_table_columns
 from src.schemas.userTypeSchema import UserTypeSchema
+from src.infra.database.serializers import line_to_dict
 
 
 class UserTypeService:
@@ -41,7 +42,7 @@ class UserTypeService:
             if row is None:
                 return JSONResponse(status_code=404, content={"error": True, "message": "Tipo de usuário não encontrado"})
         
-        user_type = {"id": row[0], "nome": row[1]}
+        user_type = line_to_dict(row, self.columns)
         return JSONResponse(status_code=200, content={"error": False, "data": user_type})
 
     def add(self, user_type: UserTypeSchema) -> JSONResponse:
