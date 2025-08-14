@@ -25,12 +25,22 @@ from main import app
 # ----------------------------------------------------
 
 
-def create_user_type(name: str) -> str:
-    """Retorna uma string do dict criado, usar em `client.method(content=STRING)`."""
+def create_user_type(name: str) -> dict[str, str]:
+    """
+    Helper function to generate a dictionary representing a user type payload for API requests.
+
+    Args:
+        name (str): The name of the user type.
+
+    Returns:
+        output (str): Dictionary with user type fields.
+    """
     user_type = {"nome": name}
+    return user_type
 
-    return str(user_type).replace("'", '"')
-
+@pytest.fixture(scope="session")
+def headers():
+    return {"Content-Type": "application/json", "accept": "application/json"}
 
 @pytest.fixture(scope="session")
 def client():
@@ -38,58 +48,56 @@ def client():
         yield test_client
 
 
-def test_create_valid_user_type(client):
+def test_create_valid_user_type(client, headers):
     content = create_user_type("valid_user_type_name")
-    response = client.post("/user/type", content=content)
+    response = client.post("/user/type", json=content, headers=headers)
     assert response.status_code == 200
 
 
-def test_create_invalid_user_type(client):
+def test_create_invalid_user_type(client, headers):
     content = create_user_type("")
-    response = client.post("/user/type", content=content)
+    response = client.post("/user/type", json=content, headers=headers)
     assert response.status_code == 422
 
 
-def test_create_repeated_user_type(client):
+def test_create_repeated_user_type(client, headers):
     content = create_user_type("repeated_user_type")
-    response = client.post("/user/type", content=content)
-    response = client.post("/user/type", content=content)
+    response = client.post("/user/type", json=content, headers=headers)
+    response = client.post("/user/type", json=content, headers=headers)
     assert response.status_code == 400
 
 
-def test_edit_valid_user_type(client):
+def test_edit_valid_user_type(client, headers):
     to_edit = create_user_type("valid_user_type_name_for_edit_1")
     new_value = create_user_type("valid_user_type_name_for_edit_2")
 
-    existing_user_type_id = client.post("/user/type/", content=to_edit).json()["id"]
-    response = client.put(
-        f"/user/type/{existing_user_type_id}", content=new_value
-    )
+    existing_user_type_id = client.post("/user/type/", json=to_edit, headers=headers).json()["id"]
+    response = client.put(f"/user/type/{existing_user_type_id}", json=new_value, headers=headers)
     assert response.status_code == 200
 
 
-def test_edit_invalid_user_type(client):
+def test_edit_invalid_user_type(client, headers):
     type_to_edit = create_user_type("type_to_edit")
-    inserted_id = client.post("/user/type/", content=type_to_edit).json()["id"]
+    inserted_id = client.post("/user/type/", json=type_to_edit, headers=headers).json()["id"]
 
     content = create_user_type("")
-    response = client.put(f"/user/type/{inserted_id}", content=content)
+    response = client.put(f"/user/type/{inserted_id}", json=content, headers=headers)
     assert response.status_code == 422
 
 
-def test_edit_repeated_user_type(client):
+def test_edit_repeated_user_type(client, headers):
     mocked_type = create_user_type("mocked_type")
     existing_type = create_user_type("existing_type")
 
-    mocked_id = client.post("/user/type/", content=mocked_type).json()["id"]
-    client.post("/user/type/", content=existing_type)
+    mocked_id = client.post("/user/type/", json=mocked_type, headers=headers).json()["id"]
+    client.post("/user/type/", json=existing_type, headers=headers)
 
-    response = client.put(f"/user/type/{mocked_id}", content=existing_type)
+    response = client.put(f"/user/type/{mocked_id}", json=existing_type, headers=headers)
     assert response.status_code == 400
 
-def test_delete_unused_user_type(client):
+def test_delete_unused_user_type(client, headers):
     mocked_type = create_user_type("type_to_delete")
-    mocked_id = client.post("/user/type", content=mocked_type).json()["id"]
+    mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()["id"]
 
     response = client.delete(f"/user/type/{mocked_id}")
     assert response.status_code == 200
