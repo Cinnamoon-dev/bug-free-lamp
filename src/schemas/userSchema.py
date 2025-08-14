@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, EmailStr, model_validator
 
 class UserAddSchema(BaseModel):
     email: EmailStr = Field(..., max_length=50)
-    password: str = Field(..., min_length=1, max_length=200)
+    senha: str = Field(..., min_length=1, max_length=200)
     tipo_id: int
 
     @model_validator(mode="after")
@@ -15,7 +15,7 @@ class UserAddSchema(BaseModel):
 
 class UserEditSchema(BaseModel):
     email: Optional[EmailStr] = None
-    password: Optional[str] = None
+    senha: Optional[str] = None
     tipo_id: Optional[int] = None
 
     @model_validator(mode="after")
