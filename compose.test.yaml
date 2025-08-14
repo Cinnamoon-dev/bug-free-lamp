@@ -18,8 +18,6 @@ services:
         condition: service_healthy
     networks:
       - back-net
-    ports:
-      - 8000:8000
   
   postgres_api:
     container_name: postgres_api
