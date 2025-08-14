@@ -13,11 +13,11 @@ def user_all(
     rows_per_page: int = 10,
     sort_by: str | None = None
 ):
-    return
+    return UserService().all(request.query_params)
 
 @router.get("/{user_id:int}")
 def user_view(user_id: int):
-    return
+    return UserService().view(user_id)
 
 @router.post("/")
 def user_add(user: UserAddSchema):
@@ -25,8 +25,8 @@ def user_add(user: UserAddSchema):
 
 @router.put("/{user_id:int}")
 def user_edit(user_id: int, user: UserEditSchema):
-    return
+    return UserService().edit(user_id, user)
 
 @router.delete("/{user_id:int}")
 def user_delete(user_id: int):
-    return
+    return UserService().delete(user_id)
