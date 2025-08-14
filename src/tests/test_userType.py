@@ -12,16 +12,15 @@ from main import app
 # Ver um tipo de usuário enviando um id inválido
 # Ver um tipo de usuário enviando um id válido
 # ----------------------------------------------------
-# Editar um tipo de usuario sem mandar o corpo da requisição, ou com o corpo vazio
+# Editar um tipo de usuario com o corpo da requisição vazio
+# Editar um tipo de usuario com o corpo nulo
 # Editar um tipo de usuario para um nome valido
 # Editar um tipo de usuario para uma string vazia
 # Editar um tipo de usuario para um nome ja existente
-# Editar um tipo de usuário enviando id inválido
 # ----------------------------------------------------
 # Deletar um tipo de usuario que nao esta sendo usado
 # Deletar um tipo de usuario que esta sendo usado
 # Deletar um tipo de usuario que nao existe
-# Deletar um tipo de usuário enviando id inválido
 # ----------------------------------------------------
 
 
@@ -95,9 +94,30 @@ def test_edit_repeated_user_type(client, headers):
     response = client.put(f"/user/type/{mocked_id}", json=existing_type, headers=headers)
     assert response.status_code == 400
 
+def test_edit_user_type_with_empty_body(client, headers):
+    existing_type = create_user_type("empty_body_test")
+    existing_id = client.post("/user/type/", json=existing_type, headers=headers).json()["id"]
+
+    response = client.put(f"/user/type/{existing_id}", json={}, headers=headers)
+    assert response.status_code == 422
+
+def test_edit_user_type_with_null_body(client, headers):
+    existing_type = create_user_type("null_body_test")
+    existing_id = client.post("/user/type/", json=existing_type, headers=headers).json()["id"]
+
+    response = client.put(f"/user/type/{existing_id}", json=None, headers=headers)
+    assert response.status_code == 422
+
 def test_delete_unused_user_type(client, headers):
     mocked_type = create_user_type("type_to_delete")
     mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()["id"]
 
     response = client.delete(f"/user/type/{mocked_id}")
+    assert response.status_code == 200
+
+def test_delete_nonexistent_user_type(client, headers):
+    mocked_type = create_user_type("nonexistent_user_type")
+    mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()["id"]
+
+    response = client.delete(f"/user/type/{mocked_id + 1999}")
     assert response.status_code == 200
