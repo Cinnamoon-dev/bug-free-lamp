@@ -86,3 +86,29 @@ def paginate(
         },
         "error": False
     }
+
+def fields_to_update(fields: dict[str, Any]) -> tuple[str, tuple[Any]]:
+    """
+    Creates a string for the SET clause of an SQL UPDATE statement and a tuple of values.
+
+    Args:
+        fields (dict[str, Any]): Dictionary where keys are column names and values are the new values to update.
+
+    Returns:
+        output (tuple[str, tuple[Any]]): 
+            - The first element is a formatted string for the SET clause, e.g., 'column1 = %s, column2 = %s'.
+            - The second element is a tuple with the values to be used in the SQL statement.
+    """
+
+    string_output = ""
+
+    if len(fields) == 1:
+        for field in fields.keys():
+            string_output = f"{field} = %s"
+
+        return string_output, tuple(fields.values())
+
+    for field in fields.keys():
+        string_output += f"{field} = %s, "
+ 
+    return string_output[:-2], tuple(fields.values())
