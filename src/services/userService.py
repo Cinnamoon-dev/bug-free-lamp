@@ -1,10 +1,10 @@
 from fastapi.responses import JSONResponse
 from fastapi.datastructures import QueryParams
 
-from src.infra.database.serializers import line_to_dict
-from src.services import paginate
 from src.infra.database.database import PgDatabase
+from src.services import paginate, fields_to_update
 from src.infra.database import retrieve_table_columns
+from src.infra.database.serializers import line_to_dict
 from src.schemas.userSchema import UserAddSchema, UserEditSchema
 
 class UserService:
@@ -60,11 +60,14 @@ class UserService:
         return JSONResponse(status_code=200, content={"error": False, "message": f"Usuário {user.email} adicionado com sucesso.", "id": inserted_id})
 
     def edit(self, user_id: int, user: UserEditSchema) -> JSONResponse:
+        user_dict = user.model_dump(exclude_none=True)
+        if not user_dict:
+            return JSONResponse(status_code=200, content={"error": False, "message": f"Usuário com id {user_id} editado com sucesso."})
+
+        set_fields, set_values = fields_to_update(user_dict)
         try:
             with PgDatabase() as db:
-                # TODO
-                # Criar método para escolher os campos que vao para o SET
-                #db.cursor.execute(f"UPDATE {self.table} SET nome = %s WHERE id = %s", (user_type.nome, user_type_id))
+                db.cursor.execute(f"UPDATE {self.table} SET {set_fields} WHERE id = %s", set_values + (user_id,))
                 db.connection.commit()
         except Exception:
             return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})

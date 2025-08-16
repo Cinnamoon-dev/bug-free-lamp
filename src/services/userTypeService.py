@@ -2,8 +2,8 @@ from fastapi.responses import JSONResponse
 from psycopg2.errors import UniqueViolation
 from fastapi.datastructures import QueryParams
 
-from src.services import paginate
 from src.infra.database.database import PgDatabase
+from src.services import paginate, fields_to_update
 from src.infra.database import retrieve_table_columns
 from src.schemas.userTypeSchema import UserTypeSchema
 from src.infra.database.serializers import line_to_dict
@@ -64,14 +64,19 @@ class UserTypeService:
         return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário {user_type.nome} adicionado com sucesso.", "id": inserted_id})
         
     def edit(self, user_type_id: int, user_type: UserTypeSchema) -> JSONResponse:
+        user_type_dict = user_type.model_dump(exclude_none=True)
+        if not user_type_dict:
+            return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário com id {user_type_id} editado com sucesso."})
+
+        set_fields, set_values = fields_to_update(user_type_dict)
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"UPDATE {self.table} SET nome = %s WHERE id = %s", (user_type.nome, user_type_id))
+                db.cursor.execute(f"UPDATE {self.table} SET {set_fields} WHERE id = %s", set_values + (user_type_id,))
                 db.connection.commit()
         except UniqueViolation as e:
             return JSONResponse(status_code=400, content={"error": True, "message": str(e)})
-        except Exception:
-            return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"error": True, "message": str(e)})
 
         return JSONResponse(status_code=200, content={"error": False, "message": f"Tipo de usuário com id {user_type_id} editado com sucesso."})
     
