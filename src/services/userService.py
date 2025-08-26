@@ -1,3 +1,4 @@
+from functools import reduce
 from fastapi.responses import JSONResponse
 from fastapi.datastructures import QueryParams
 
@@ -11,12 +12,18 @@ class UserService:
     def __init__(self) -> None:
         self.table = "usuario"
         self.columns = retrieve_table_columns(self.table)
+        self.all_columns = reduce(lambda acc, elem: acc + ", " + str(elem), self.columns)
 
     def all(self, query_params: QueryParams) -> JSONResponse:
-        query = f"SELECT id, email, senha, tipo_id FROM {self.table}"
+        show_fk_id = bool(int(query_params.get("show_fk_id", 1)))
         page = int(query_params.get("page", 1))
         rows_per_page = int(query_params.get("rows_per_page", 10))
         sort = query_params.get("sort_by", None)
+
+        if show_fk_id:
+            query = f"SELECT {self.all_columns} FROM {self.table}"
+        else:
+            query = f"SELECT u.id, u.email, u.senha, tu.nome AS tipo_usuario FROM {self.table} AS u INNER JOIN tipo_usuario AS tu ON u.tipo_usuario_id=tu.id"
 
         if sort is not None:
             sort_column, sort_order = sort.split(",")
@@ -34,7 +41,7 @@ class UserService:
         user = None
 
         with PgDatabase() as db:
-            db.cursor.execute(f"SELECT id, email, senha, tipo_id FROM {self.table} WHERE id = %s", (user_id,))
+            db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s", (user_id,))
             row = db.cursor.fetchone()
 
             if row is None:
@@ -46,7 +53,7 @@ class UserService:
     def add(self, user: UserAddSchema) -> JSONResponse:
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"INSERT INTO {self.table} (email, senha, tipo_id) VALUES (%s, %s, %s) RETURNING id", (user.email, user.senha, user.tipo_id))
+                db.cursor.execute(f"INSERT INTO {self.table} (email, senha, tipo_usuario_id) VALUES (%s, %s, %s) RETURNING id", (user.email, user.senha, user.tipo_usuario_id))
                 raw_id = db.cursor.fetchone()
 
                 if raw_id is None:

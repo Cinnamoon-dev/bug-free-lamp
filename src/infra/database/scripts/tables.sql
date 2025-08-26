@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS usuario (
     id SERIAL PRIMARY KEY,
     email VARCHAR(50) UNIQUE NOT NULL,
     senha VARCHAR(200) NOT NULL,
-    tipo_id INTEGER NOT NULL,
+    tipo_usuario_id INTEGER NOT NULL,
 
-    CONSTRAINT fk_tipo_usuario FOREIGN KEY (tipo_id)
+    CONSTRAINT fk_tipo_usuario FOREIGN KEY (tipo_usuario_id)
     REFERENCES tipo_usuario (id)
 );
