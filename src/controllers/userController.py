@@ -11,7 +11,8 @@ def user_all(
     request: Request,
     page: int = 1,
     rows_per_page: int = 10,
-    sort_by: str | None = None
+    sort_by: str | None = None,
+    show_fk_id: int | None = 1
 ):
     return UserService().all(request.query_params)
 
