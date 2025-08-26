@@ -1,3 +1,4 @@
+from functools import reduce
 from fastapi.responses import JSONResponse
 from psycopg2.errors import UniqueViolation
 from fastapi.datastructures import QueryParams
@@ -13,9 +14,10 @@ class UserTypeService:
     def __init__(self) -> None:
         self.table: str = "tipo_usuario"
         self.columns: list[str] = retrieve_table_columns(self.table)
+        self.all_columns = reduce(lambda acc, elem: acc + ", " + str(elem), self.columns)
 
     def all(self, query_params: QueryParams) -> JSONResponse:
-        query = f"SELECT id, nome FROM {self.table}"
+        query = f"SELECT {self.all_columns} FROM {self.table}"
         page = int(query_params.get("page", 1))
         rows_per_page = int(query_params.get("rows_per_page", 10))
         sort = query_params.get("sort_by", None)
@@ -37,7 +39,7 @@ class UserTypeService:
 
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"SELECT id, nome FROM {self.table} WHERE id = %s", (user_type_id,))
+                db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s", (user_type_id,))
                 row = db.cursor.fetchone()
 
                 if row is None:
