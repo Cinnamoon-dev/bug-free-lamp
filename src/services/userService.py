@@ -40,12 +40,15 @@ class UserService:
     def view(self, user_id: int) -> JSONResponse:
         user = None
 
-        with PgDatabase() as db:
-            db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s", (user_id,))
-            row = db.cursor.fetchone()
+        try:
+            with PgDatabase() as db:
+                db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s", (user_id,))
+                row = db.cursor.fetchone()
 
-            if row is None:
-                return JSONResponse(status_code=404, content={"error": True, "message": "Usuário não encontrado"})
+                if row is None:
+                    return JSONResponse(status_code=404, content={"error": True, "message": "Usuário não encontrado"})
+        except Exception:
+            return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
         
         user = line_to_dict(row, self.columns)
         return JSONResponse(status_code=200, content={"error": False, "data": user})

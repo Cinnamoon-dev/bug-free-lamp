@@ -35,12 +35,15 @@ class UserTypeService:
     def view(self, user_type_id: int) -> JSONResponse:
         user_type = None
 
-        with PgDatabase() as db:
-            db.cursor.execute(f"SELECT id, nome FROM {self.table} WHERE id = %s", (user_type_id,))
-            row = db.cursor.fetchone()
+        try:
+            with PgDatabase() as db:
+                db.cursor.execute(f"SELECT id, nome FROM {self.table} WHERE id = %s", (user_type_id,))
+                row = db.cursor.fetchone()
 
-            if row is None:
-                return JSONResponse(status_code=404, content={"error": True, "message": "Tipo de usuário não encontrado"})
+                if row is None:
+                    return JSONResponse(status_code=404, content={"error": True, "message": "Tipo de usuário não encontrado"})
+        except Exception:
+            return JSONResponse(status_code=500, content={"error": True, "message": "Database error"})
         
         user_type = line_to_dict(row, self.columns)
         return JSONResponse(status_code=200, content={"error": False, "data": user_type})
