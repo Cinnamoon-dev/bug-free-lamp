@@ -1,13 +1,9 @@
 import os
 import jwt
-import json
-from fastapi import Depends, HTTPException
-from typing import Annotated, Any
+from typing import Any
+from fastapi import HTTPException
 from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta, timezone
-
-from src.services.userService import UserService
 
 
 JWT_ACCESS_SECRET_KEY = os.getenv("JWT_ACCESS_SECRET_KEY", "5978c7af950f2a6097b4f07701b388a57abea6c4bbc36f09a7677306653e7796")
@@ -24,30 +20,20 @@ bcrypt_context = CryptContext(
 )
 
 def create_token(user_id: int, secret_key: str, expires_delta: timedelta) -> str:
-    to_encode: dict[str, Any] = {"sub": user_id}
+    to_encode: dict[str, Any] = {"sub": str(user_id)}
     expire = datetime.now(timezone.utc) + expires_delta
 
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
     return encoded_jwt
 
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/login")
-token_dependency = Annotated[str, Depends(oauth2_bearer)]
-
-
-def get_current_user(token: token_dependency) -> dict[str, Any]:
+def decode_token(jwt_token: str, secret_key: str | bytes, algorithms: list[str]) -> dict[str, Any]:
     try:
-        payload: dict[str, Any] = jwt.decode(token, JWT_ACCESS_SECRET_KEY, ALGORITHM)
-        user_id = payload.get("sub")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Usuário não autorizado")
-        
-        user = UserService().view(user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    except:
-        raise HTTPException(status_code=500, detail="Erro ao autenticar usuário")
-    
-    return json.loads(user.body)
-
-user_dependency = Annotated[dict[str, Any], Depends(get_current_user)]
+        payload = jwt.decode(jwt_token, secret_key, algorithms)
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Erro ao autenticar usuário")
