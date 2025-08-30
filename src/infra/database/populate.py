@@ -19,6 +19,7 @@ def populate() -> None:
             db.connection.commit()
 
     insert("/scripts/tables.sql")
+    insert("/scripts/rules.sql")
 
 
 if __name__ == "__main__":
