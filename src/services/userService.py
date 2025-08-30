@@ -14,7 +14,10 @@ class UserService:
     def __init__(self) -> None:
         self.table = "usuario"
         self.columns = retrieve_table_columns(self.table)
-        self.all_columns = reduce(lambda acc, elem: acc + ", " + str(elem), self.columns)
+        try:
+            self.all_columns = reduce(lambda acc, elem: acc + ", " + str(elem), self.columns)
+        except Exception:
+            self.all_columns = ""
 
     def all(self, query_params: QueryParams) -> dict[str, Any]:
         show_fk_id = bool(int(query_params.get("show_fk_id", 1)))
