@@ -61,6 +61,7 @@ class UserService:
         user = line_to_dict(row, self.columns)
         return user
     
+
     def view_by_email(self, email: str) -> dict[str, Any]:
         user = None
 
@@ -79,7 +80,7 @@ class UserService:
 
     def add(self, user: UserAddSchema) -> dict[str, Any]:
         senha = bcrypt_context.hash(user.senha)
-
+ 
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"INSERT INTO {self.table} (email, senha, tipo_usuario_id) VALUES (%s, %s, %s) RETURNING id", (user.email.lower(), senha, user.tipo_usuario_id))
