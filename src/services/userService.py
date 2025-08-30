@@ -5,6 +5,7 @@ from fastapi.datastructures import QueryParams
 
 from src.infra.database.database import PgDatabase
 from src.services import paginate, fields_to_update
+from src.infra.security.hashing import bcrypt_context
 from src.infra.database import retrieve_table_columns
 from src.infra.database.serializers import line_to_dict
 from src.schemas.userSchema import UserAddSchema, UserEditSchema
@@ -57,10 +58,28 @@ class UserService:
         user = line_to_dict(row, self.columns)
         return user
     
-    def add(self, user: UserAddSchema) -> dict[str, Any]:
+    def view_by_email(self, email: str) -> dict[str, Any]:
+        user = None
+
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"INSERT INTO {self.table} (email, senha, tipo_usuario_id) VALUES (%s, %s, %s) RETURNING id", (user.email, user.senha, user.tipo_usuario_id))
+                db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE email = %s", (email,))
+                row = db.cursor.fetchone()
+
+                if row is None:
+                    raise HTTPException(status_code=404, detail={"error": True, "message": "Usuário não encontrado"})
+        except Exception:
+            raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
+        
+        user = line_to_dict(row, self.columns)
+        return user
+
+    def add(self, user: UserAddSchema) -> dict[str, Any]:
+        senha = bcrypt_context.hash(user.senha)
+
+        try:
+            with PgDatabase() as db:
+                db.cursor.execute(f"INSERT INTO {self.table} (email, senha, tipo_usuario_id) VALUES (%s, %s, %s) RETURNING id", (user.email.lower(), senha, user.tipo_usuario_id))
                 raw_id = db.cursor.fetchone()
 
                 if raw_id is None:
