@@ -16,7 +16,10 @@ class UserTypeService:
     def __init__(self) -> None:
         self.table: str = "tipo_usuario"
         self.columns: list[str] = retrieve_table_columns(self.table)
-        self.all_columns = reduce(lambda acc, elem: acc + ", " + str(elem), self.columns)
+        try:
+            self.all_columns = reduce(lambda acc, elem: acc + ", " + str(elem), self.columns)
+        except Exception:
+            self.all_columns = ""
 
     def all(self, query_params: QueryParams) -> dict[str, Any]:
         query = f"SELECT {self.all_columns} FROM {self.table}"

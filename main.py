@@ -1,12 +1,13 @@
 import os
 import uvicorn
 from fastapi import FastAPI
-from src.controllers import userTypeController, userController
+from src.controllers import userTypeController, userController, authController
 
 app = FastAPI(debug=True)
 
 app.include_router(userTypeController.router)
 app.include_router(userController.router)
+app.include_router(authController.router)
 
 if __name__ == "__main__":
     uvicorn.run(
