@@ -42,7 +42,7 @@ class UserTypeService:
         output = paginate(query, page, rows_per_page, sort) 
         return output
 
-    def view(self, user_type_id: int) -> dict[str, Any]:
+    def view(self, user_type_id: int) -> dict[str, Any] | None:
         user_type = None
 
         try:
@@ -50,15 +50,15 @@ class UserTypeService:
                 db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s", (user_type_id,))
                 row = db.cursor.fetchone()
 
-                if row is None:
-                    raise HTTPException(status_code=404, detail={"error": True, "message": "Tipo de usuário não encontrado"})
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
         
-        user_type = line_to_dict(row, self.columns)
+        if row is not None:
+            user_type = line_to_dict(row, self.columns)
+
         return user_type
 
-    def add(self, user_type: UserTypeSchema) -> dict[str, Any]:
+    def add(self, user_type: UserTypeSchema) -> int:
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"INSERT INTO {self.table} (nome) VALUES (%s) RETURNING id", (user_type.nome,))
@@ -74,9 +74,9 @@ class UserTypeService:
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
         
-        return {"error": False, "message": f"Tipo de usuário {user_type.nome} adicionado com sucesso.", "id": inserted_id}
+        return inserted_id
         
-    def edit(self, user_type_id: int, user_type: UserTypeSchema) -> dict[str, Any]:
+    def edit(self, user_type_id: int, user_type: UserTypeSchema) -> None:
         user_type_dict = user_type.model_dump(exclude_none=True)
         if not user_type_dict:
             raise HTTPException(status_code=200, detail={"error": False, "message": f"Tipo de usuário com id {user_type_id} editado com sucesso."})
@@ -91,14 +91,10 @@ class UserTypeService:
         except Exception as e:
             raise HTTPException(status_code=500, detail={"error": True, "message": str(e)})
 
-        return {"error": False, "message": f"Tipo de usuário com id {user_type_id} editado com sucesso."}
-    
-    def delete(self, user_type_id: int) -> dict[str, Any]:
+    def delete(self, user_type_id: int) -> None:
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"DELETE FROM {self.table} WHERE id = %s", (user_type_id,))
                 db.connection.commit()
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
-
-        return {"error": False, "message": f"Tipo de usuário com id {user_type_id} deletado com sucesso."}
