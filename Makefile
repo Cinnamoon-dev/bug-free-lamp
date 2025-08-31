@@ -1,5 +1,5 @@
 clean:
-	rm -rf $(shell find . | grep cache)
+	rm -rf $(shell find . | grep __pycache__)
 
 populate:
 	uv run python3 -m src.infra.database.populate

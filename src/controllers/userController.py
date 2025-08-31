@@ -1,3 +1,4 @@
+from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, Request
 
 from ._helpers import PermissionChecker
@@ -23,14 +24,20 @@ def user_view(
     user_id: int, 
     perms = Depends(PermissionChecker("usuario-view"))
 ):
-    return UserService().view(user_id)
+    user = UserService().view(user_id)
+
+    if user is None:
+        return JSONResponse(status_code=404, content={"error": True, "message": f"User with id {user_id} not found"})
+
+    return JSONResponse(status_code=200, content={"error": False, "data": user})
 
 @router.post("/")
 def user_add(
     user: UserAddSchema,
     perms = Depends(PermissionChecker("usuario-add"))
 ):
-    return UserService().add(user)
+    inserted_id = UserService().add(user)
+    return JSONResponse(status_code=200, content={"error": False, "message": f"User inserted successfully", "id": inserted_id})
 
 @router.put("/{user_id:int}")
 def user_edit(
@@ -38,11 +45,13 @@ def user_edit(
     user: UserEditSchema,
     perms = Depends(PermissionChecker("usuario-edit"))
 ):
-    return UserService().edit(user_id, user)
+    UserService().edit(user_id, user)
+    return JSONResponse(status_code=200, content={"error": False, "message": "User edited successfully"})
 
 @router.delete("/{user_id:int}")
 def user_delete(
     user_id: int,
     perms = Depends(PermissionChecker("usuario-delete"))
 ):
-    return UserService().delete(user_id)
+    UserService().delete(user_id)
+    return JSONResponse(status_code=200, content={"error": False, "message": "User deleted successfully"})
