@@ -19,7 +19,7 @@ class UserTypeService:
         try:
             self.all_columns = reduce(lambda acc, elem: acc + ", " + str(elem), self.columns)
         except Exception:
-            self.all_columns = ""
+            self.all_columns = "*"
 
     def all(self, query_params: QueryParams) -> dict[str, Any]:
         query = f"SELECT {self.all_columns} FROM {self.table}"
