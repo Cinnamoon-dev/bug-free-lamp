@@ -1,3 +1,4 @@
+from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, Request
 
 from ._helpers import PermissionChecker
@@ -21,16 +22,20 @@ def user_type_view(
     user_type_id: int,
     perms = Depends(PermissionChecker("tipo_usuario-view"))
 ):
-    response = UserTypeService().view(user_type_id)
-    return response
+    user_type = UserTypeService().view(user_type_id)
+
+    if user_type is None:
+        return JSONResponse(status_code=404, content={"error": True, "message": f"User type with id {user_type_id} not found"})
+
+    return JSONResponse(status_code=200, content={"error": False, "data": user_type})
 
 @router.post("/")
 def user_type_add(
     user_type: UserTypeSchema,
     perms = Depends(PermissionChecker("tipo_usuario-add"))
 ):
-    response = UserTypeService().add(user_type)
-    return response
+    inserted_id = UserTypeService().add(user_type)
+    return JSONResponse(status_code=200, content={"error": False, "message": f"User type inserted successfully", "id": inserted_id})
 
 @router.put("/{user_type_id:int}")
 def user_type_edit(
@@ -38,13 +43,13 @@ def user_type_edit(
     user_type: UserTypeSchema,
     perms = Depends(PermissionChecker("tipo_usuario-edit"))
 ):
-    response = UserTypeService().edit(user_type_id, user_type)
-    return response
+    UserTypeService().edit(user_type_id, user_type)
+    return JSONResponse(status_code=200, content={"error": False, "message": "User type edited successfully"})
 
 @router.delete("/{user_type_id:int}")
 def user_type_delete(
     user_type_id: int,
     perms = Depends(PermissionChecker("tipo_usuario-delete"))
 ):
-    response = UserTypeService().delete(user_type_id)
-    return response
+    UserTypeService().delete(user_type_id)
+    return JSONResponse(status_code=200, content={"error": False, "message": "User type deleted successfully"})
