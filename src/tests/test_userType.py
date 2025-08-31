@@ -41,8 +41,13 @@ def create_user_type(name: str) -> dict[str, str]:
     return user_type
 
 @pytest.fixture(scope="session")
-def headers():
-    return {"Content-Type": "application/json", "accept": "application/json"}
+def headers(client):
+    base_headers = {"Content-Type": "application/x-www-form-urlencoded", "accept": "application/json"}
+    admin_user = {"username": "admin@email.com", "password": "1234"}
+
+    response = client.post("/auth/login", data=admin_user, headers=base_headers).json()
+    headers = {"Content-Type": "application/json", "accept": "application/json", "Authorization": f"{response["token_type"]} {response["access_token"]}"}
+    return headers
 
 @pytest.fixture(scope="session")
 def client():
@@ -115,12 +120,12 @@ def test_delete_unused_user_type(client, headers):
     mocked_type = create_user_type("type_to_delete")
     mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()["id"]
 
-    response = client.delete(f"/user/type/{mocked_id}")
+    response = client.delete(f"/user/type/{mocked_id}", headers=headers)
     assert response.status_code == 200
 
 def test_delete_nonexistent_user_type(client, headers):
     mocked_type = create_user_type("nonexistent_user_type")
     mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()["id"]
 
-    response = client.delete(f"/user/type/{mocked_id + 1999}")
+    response = client.delete(f"/user/type/{mocked_id + 1999}", headers=headers)
     assert response.status_code == 200
