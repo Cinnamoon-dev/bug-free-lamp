@@ -11,9 +11,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/login")
 def login(form_data: form_auth_dependency):
     email = form_data.username.lower()
-    try:
-        user = UserService().view_by_email(email)
-    except Exception:
+    user = UserService().view_by_email(email)
+
+    if not user:
         raise HTTPException(status_code=404, detail={"message": "Email or password incorrect.", "error": True}) 
 
     if not bcrypt_context.verify(form_data.password, user["senha"]):
@@ -33,9 +33,8 @@ def refresh(refresh_token: str = Header(..., alias="X-Refresh-Token")):
     payload = decode_token(refresh_token, JWT_REFRESH_SECRET_KEY, [ALGORITHM])
     user_id = int(payload["sub"])
 
-    try:
-        UserService().view(user_id)
-    except Exception:
+    user = UserService().view(user_id)
+    if not user:
         raise HTTPException(status_code=401, detail={"message": "User not found", "error": True})
 
     new_access_token = create_token(payload["sub"], JWT_ACCESS_SECRET_KEY, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
