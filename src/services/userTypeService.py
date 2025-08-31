@@ -1,7 +1,6 @@
-from functools import reduce
 from typing import Any
+from functools import reduce
 from fastapi import HTTPException
-from fastapi.responses import JSONResponse
 from psycopg2.errors import UniqueViolation
 from fastapi.datastructures import QueryParams
 
@@ -39,7 +38,7 @@ class UserTypeService:
             if sort_order.lower() not in ["asc", "desc"]:
                 raise HTTPException(status_code=422, detail={"error": True, "message": f"Direção de ordenação {sort_order} inválida, deve ser 'asc' ou 'desc'"})
         
-        output = paginate(query, page, rows_per_page, sort) 
+        output = paginate(query, page, rows_per_page, sort)
         return output
 
     def view(self, user_type_id: int) -> dict[str, Any] | None:
@@ -49,7 +48,6 @@ class UserTypeService:
             with PgDatabase() as db:
                 db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s", (user_type_id,))
                 row = db.cursor.fetchone()
-
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
         

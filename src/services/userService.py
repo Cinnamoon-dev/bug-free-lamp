@@ -45,40 +45,37 @@ class UserService:
         output = paginate(query, page, rows_per_page, sort) 
         return output
 
-    def view(self, user_id: int) -> dict[str, Any]:
+    def view(self, user_id: int) -> dict[str, Any] | None:
         user = None
 
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s", (user_id,))
                 row = db.cursor.fetchone()
-
-                if row is None:
-                    raise HTTPException(status_code=404, detail={"error": True, "message": "Usuário não encontrado"})
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
-        
-        user = line_to_dict(row, self.columns)
-        return user
-    
+ 
+        if row is not None:
+            user = line_to_dict(row, self.columns)
 
-    def view_by_email(self, email: str) -> dict[str, Any]:
+        return user
+
+    def view_by_email(self, email: str) -> dict[str, Any] | None:
         user = None
 
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE email = %s", (email,))
                 row = db.cursor.fetchone()
-
-                if row is None:
-                    raise HTTPException(status_code=404, detail={"error": True, "message": "Usuário não encontrado"})
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
         
-        user = line_to_dict(row, self.columns)
+        if row is not None:
+            user = line_to_dict(row, self.columns)
+
         return user
 
-    def add(self, user: UserAddSchema) -> dict[str, Any]:
+    def add(self, user: UserAddSchema) -> int:
         senha = bcrypt_context.hash(user.senha)
  
         try:
@@ -91,12 +88,14 @@ class UserService:
 
                 inserted_id = raw_id[0]
                 db.connection.commit()
+        except HTTPException as e:
+            raise e
         except Exception as e:
             raise HTTPException(status_code=500, detail={"error": True, "message": str(e)})
         
-        return {"error": False, "message": f"Usuário {user.email} adicionado com sucesso.", "id": inserted_id}
+        return inserted_id
 
-    def edit(self, user_id: int, user: UserEditSchema) -> dict[str, Any]:
+    def edit(self, user_id: int, user: UserEditSchema) -> None:
         user_dict = user.model_dump(exclude_none=True)
         if not user_dict:
             raise HTTPException(status_code=200, detail={"error": False, "message": f"Usuário com id {user_id} editado com sucesso."})
@@ -109,14 +108,10 @@ class UserService:
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
 
-        return {"error": False, "message": f"Usuário com id {user_id} editado com sucesso."}
-
-    def delete(self, user_id: int) -> dict[str, Any]:
+    def delete(self, user_id: int) -> None:
         try:
             with PgDatabase() as db:
                 db.cursor.execute(f"DELETE FROM {self.table} WHERE id = %s", (user_id,))
                 db.connection.commit()
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
-
-        return {"error": False, "message": f"Usuário com id {user_id} deletado com sucesso."}
