@@ -3,7 +3,7 @@ INSERT INTO tipo_usuario (id, nome) VALUES (1, 'admin');
 
 -- Usuário
 -- senha: 1234
-INSERT INTO usuario (id, email, senha, tipo_usuario_id) VALUES (1, "admin@email.com", "$6$xvhoMyeu7TlurX6Z$.j4NQGAvbEzu3IKSJAWU8IzTqAGVW8RZ2sUWmJSzJY2QR0VJhm26rOC/0.7UXT3c8YrwoS3y4pUdbWJV7GEZG1", 1)
+INSERT INTO usuario (id, email, senha, tipo_usuario_id) VALUES (1, 'admin@email.com', '$6$xvhoMyeu7TlurX6Z$.j4NQGAvbEzu3IKSJAWU8IzTqAGVW8RZ2sUWmJSzJY2QR0VJhm26rOC/0.7UXT3c8YrwoS3y4pUdbWJV7GEZG1', 1)
 
 -- Controllers
 INSERT INTO controllers (id, nome) VALUES (1, 'usuario');
