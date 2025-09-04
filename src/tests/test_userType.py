@@ -9,9 +9,7 @@ from main import app
 # Criar um tipo de usuario com uma string vazia
 # Criar um tipo de usuario com um nome ja existente
 # ----------------------------------------------------
-# TODO
 # Ver um tipo de usuário enviando um id cadastrado no banco
-# TODO
 # Ver um tipo de usuário enviando um id não cadastrado no banco
 # ----------------------------------------------------
 # Editar um tipo de usuario com o corpo da requisição vazio
@@ -72,6 +70,20 @@ def test_create_repeated_user_type(client, headers):
     response = client.post("/user/type", json=content, headers=headers)
     response = client.post("/user/type", json=content, headers=headers)
     assert response.status_code == 400
+
+
+def test_view_valid_user_type(client, headers):
+    existent_user = create_user_type("view_test_user")
+    existent_user_id = client.post("/user/type", json=existent_user, headers=headers).json()["id"]
+
+    response = client.get(f"/user/type/{existent_user_id}", headers=headers)
+    assert response.status_code == 200
+
+
+def test_view_invalid_user_type(client, headers):
+    invalid_id = 123521412
+    response = client.get(f"/user/type/{invalid_id}", headers=headers)
+    assert response.status_code == 404
 
 
 def test_edit_valid_user_type(client, headers):

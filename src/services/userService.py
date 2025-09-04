@@ -41,7 +41,7 @@ class UserService:
 
             if sort_order.lower() not in ["asc", "desc"]:
                 raise HTTPException(status_code=422, detail={"error": True, "message": f"Direção de ordenação {sort_order} inválida, deve ser 'asc' ou 'desc'"})
-        
+
         output = paginate(query, page, rows_per_page, sort) 
         return output
 
@@ -54,7 +54,7 @@ class UserService:
                 row = db.cursor.fetchone()
         except Exception:
             raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
- 
+
         if row is not None:
             user = line_to_dict(row, self.columns)
 
