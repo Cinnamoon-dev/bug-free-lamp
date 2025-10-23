@@ -38,7 +38,12 @@ def refresh(refresh_token: str = Header(..., alias="X-Refresh-Token")):
         raise HTTPException(status_code=401, detail={"message": "User not found", "error": True})
 
     new_access_token = create_token(payload["sub"], JWT_ACCESS_SECRET_KEY, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    return {"access_token": new_access_token, "error": False}
+    new_refresh_token = create_token(payload["sub"], JWT_REFRESH_SECRET_KEY, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+    return {
+        "access_token": new_access_token, 
+        "refresh_token": new_refresh_token,
+        "token_type": "Bearer"
+    }
 
 @router.get("/me")
 def me(user: user_dependency):
