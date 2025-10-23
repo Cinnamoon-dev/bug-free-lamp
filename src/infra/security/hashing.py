@@ -30,10 +30,11 @@ def create_token(user_id: int, secret_key: str, expires_delta: timedelta) -> str
 def decode_token(jwt_token: str, secret_key: str | bytes, algorithms: list[str]) -> dict[str, Any]:
     try:
         payload = jwt.decode(jwt_token, secret_key, algorithms)
-        return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expirado")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token inválido")
     except Exception:
         raise HTTPException(status_code=401, detail="Erro ao autenticar usuário")
+
+    return payload
