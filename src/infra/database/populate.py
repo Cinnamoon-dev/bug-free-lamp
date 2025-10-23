@@ -1,16 +1,16 @@
 import os
-from src.infra.database.database import PgDatabase
+from src.infra.database.database import PgDatabase, Database
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def populate() -> None:
+def populate(database: Database) -> None:
     def insert(filePath: str) -> None:
         sql_file = open(BASE_DIR + filePath, "r")
         sql = sql_file.read()
         lines = sql.split(";")
 
-        with PgDatabase() as db:
+        with database as db:
             for line in lines:
                 print(line)
                 if line.strip():
@@ -23,4 +23,4 @@ def populate() -> None:
 
 
 if __name__ == "__main__":
-    populate()
+    populate(PgDatabase())
