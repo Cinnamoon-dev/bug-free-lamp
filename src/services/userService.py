@@ -10,12 +10,15 @@ from src.infra.database import retrieve_table_columns
 from src.infra.database.serializers import line_to_dict
 from src.schemas.userSchema import UserAddSchema, UserEditSchema
 
+
 class UserService:
     def __init__(self) -> None:
         self.table = "usuario"
         self.columns = retrieve_table_columns(self.table)
         try:
-            self.all_columns = reduce(lambda acc, elem: acc + ", " + str(elem), self.columns)
+            self.all_columns = reduce(
+                lambda acc, elem: acc + ", " + str(elem), self.columns
+            )
         except Exception:
             self.all_columns = "*"
 
@@ -34,15 +37,33 @@ class UserService:
             try:
                 sort_column, sort_order = sort.split(",")
             except Exception:
-                raise HTTPException(status_code=422, detail={"error": True, "message": f"Coluna e direção {sort} não separada corretamente por ','"})
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        "error": True,
+                        "message": f"Coluna e direção {sort} não separada corretamente por ','",
+                    },
+                )
 
             if sort_column not in self.columns:
-                raise HTTPException(status_code=422, detail={"error": True, "message": f"Coluna {sort_column} não identificada"})
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        "error": True,
+                        "message": f"Coluna {sort_column} não identificada",
+                    },
+                )
 
             if sort_order.lower() not in ["asc", "desc"]:
-                raise HTTPException(status_code=422, detail={"error": True, "message": f"Direção de ordenação {sort_order} inválida, deve ser 'asc' ou 'desc'"})
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        "error": True,
+                        "message": f"Direção de ordenação {sort_order} inválida, deve ser 'asc' ou 'desc'",
+                    },
+                )
 
-        output = paginate(query, page, rows_per_page, sort) 
+        output = paginate(query, page, rows_per_page, sort)
         return output
 
     def view(self, user_id: int) -> dict[str, Any] | None:
@@ -50,10 +71,15 @@ class UserService:
 
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s", (user_id,))
+                db.cursor.execute(
+                    f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s",
+                    (user_id,),
+                )
                 row = db.cursor.fetchone()
         except Exception:
-            raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
+            raise HTTPException(
+                status_code=500, detail={"error": True, "message": "Database error"}
+            )
 
         if row is not None:
             user = line_to_dict(row, self.columns)
@@ -65,11 +91,16 @@ class UserService:
 
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"SELECT {self.all_columns} FROM {self.table} WHERE email = %s", (email,))
+                db.cursor.execute(
+                    f"SELECT {self.all_columns} FROM {self.table} WHERE email = %s",
+                    (email,),
+                )
                 row = db.cursor.fetchone()
         except Exception:
-            raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
-        
+            raise HTTPException(
+                status_code=500, detail={"error": True, "message": "Database error"}
+            )
+
         if row is not None:
             user = line_to_dict(row, self.columns)
 
@@ -77,36 +108,58 @@ class UserService:
 
     def add(self, user: UserAddSchema) -> int:
         senha = bcrypt_context.hash(user.senha)
- 
+
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"INSERT INTO {self.table} (email, senha, tipo_usuario_id) VALUES (%s, %s, %s) RETURNING id", (user.email.lower(), senha, user.tipo_usuario_id))
+                db.cursor.execute(
+                    f"INSERT INTO {self.table} (email, senha, tipo_usuario_id) VALUES (%s, %s, %s) RETURNING id",
+                    (user.email.lower(), senha, user.tipo_usuario_id),
+                )
                 raw_id = db.cursor.fetchone()
 
                 if raw_id is None:
-                    raise HTTPException(status_code=500, detail={"error": True, "message": f"Não foi possível inserir o usuário {user.email}."})
+                    raise HTTPException(
+                        status_code=500,
+                        detail={
+                            "error": True,
+                            "message": f"Não foi possível inserir o usuário {user.email}.",
+                        },
+                    )
 
                 inserted_id = raw_id[0]
                 db.connection.commit()
         except HTTPException as e:
             raise e
         except Exception as e:
-            raise HTTPException(status_code=500, detail={"error": True, "message": str(e)})
-        
+            raise HTTPException(
+                status_code=500, detail={"error": True, "message": str(e)}
+            )
+
         return inserted_id
 
     def edit(self, user_id: int, user: UserEditSchema) -> None:
         user_dict = user.model_dump(exclude_none=True)
         if not user_dict:
-            raise HTTPException(status_code=200, detail={"error": False, "message": f"Usuário com id {user_id} editado com sucesso."})
+            raise HTTPException(
+                status_code=200,
+                detail={
+                    "error": False,
+                    "message": f"Usuário com id {user_id} editado com sucesso.",
+                },
+            )
 
         set_fields, set_values = fields_to_update(user_dict)
         try:
             with PgDatabase() as db:
-                db.cursor.execute(f"UPDATE {self.table} SET {set_fields} WHERE id = %s", set_values + (user_id,))
+                db.cursor.execute(
+                    f"UPDATE {self.table} SET {set_fields} WHERE id = %s",
+                    set_values + (user_id,),
+                )
                 db.connection.commit()
         except Exception:
-            raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
+            raise HTTPException(
+                status_code=500, detail={"error": True, "message": "Database error"}
+            )
 
     def delete(self, user_id: int) -> None:
         try:
@@ -114,4 +167,6 @@ class UserService:
                 db.cursor.execute(f"DELETE FROM {self.table} WHERE id = %s", (user_id,))
                 db.connection.commit()
         except Exception:
-            raise HTTPException(status_code=500, detail={"error": True, "message": "Database error"})
+            raise HTTPException(
+                status_code=500, detail={"error": True, "message": "Database error"}
+            )

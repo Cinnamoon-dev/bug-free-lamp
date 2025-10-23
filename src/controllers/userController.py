@@ -8,6 +8,7 @@ from src.schemas.userSchema import UserAddSchema, UserEditSchema
 
 router = APIRouter(prefix="/user", tags=["user"])
 
+
 @router.get("/")
 def user_all(
     request: Request,
@@ -15,43 +16,51 @@ def user_all(
     rows_per_page: int = 10,
     sort_by: str | None = None,
     show_fk_id: int | None = 1,
-    perms = Depends(PermissionChecker("usuario-all"))
+    perms=Depends(PermissionChecker("usuario-all")),
 ):
     return UserService().all(request.query_params)
 
+
 @router.get("/{user_id:int}")
-def user_view(
-    user_id: int, 
-    perms = Depends(PermissionChecker("usuario-view"))
-):
+def user_view(user_id: int, perms=Depends(PermissionChecker("usuario-view"))):
     user = UserService().view(user_id)
 
     if user is None:
-        return JSONResponse(status_code=404, content={"error": True, "message": f"User with id {user_id} not found"})
+        return JSONResponse(
+            status_code=404,
+            content={"error": True, "message": f"User with id {user_id} not found"},
+        )
 
     return JSONResponse(status_code=200, content={"error": False, "data": user})
 
+
 @router.post("/")
-def user_add(
-    user: UserAddSchema,
-    perms = Depends(PermissionChecker("usuario-add"))
-):
+def user_add(user: UserAddSchema, perms=Depends(PermissionChecker("usuario-add"))):
     inserted_id = UserService().add(user)
-    return JSONResponse(status_code=200, content={"error": False, "message": f"User inserted successfully", "id": inserted_id})
+    return JSONResponse(
+        status_code=200,
+        content={
+            "error": False,
+            "message": f"User inserted successfully",
+            "id": inserted_id,
+        },
+    )
+
 
 @router.put("/{user_id:int}")
 def user_edit(
-    user_id: int, 
-    user: UserEditSchema,
-    perms = Depends(PermissionChecker("usuario-edit"))
+    user_id: int, user: UserEditSchema, perms=Depends(PermissionChecker("usuario-edit"))
 ):
     UserService().edit(user_id, user)
-    return JSONResponse(status_code=200, content={"error": False, "message": "User edited successfully"})
+    return JSONResponse(
+        status_code=200, content={"error": False, "message": "User edited successfully"}
+    )
+
 
 @router.delete("/{user_id:int}")
-def user_delete(
-    user_id: int,
-    perms = Depends(PermissionChecker("usuario-delete"))
-):
+def user_delete(user_id: int, perms=Depends(PermissionChecker("usuario-delete"))):
     UserService().delete(user_id)
-    return JSONResponse(status_code=200, content={"error": False, "message": "User deleted successfully"})
+    return JSONResponse(
+        status_code=200,
+        content={"error": False, "message": "User deleted successfully"},
+    )

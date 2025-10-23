@@ -38,14 +38,23 @@ def create_user_type(name: str) -> dict[str, str]:
     user_type = {"nome": name}
     return user_type
 
+
 @pytest.fixture(scope="session")
 def headers(client):
-    base_headers = {"Content-Type": "application/x-www-form-urlencoded", "accept": "application/json"}
+    base_headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "accept": "application/json",
+    }
     admin_user = {"username": "admin@email.com", "password": "1234"}
 
     response = client.post("/auth/login", data=admin_user, headers=base_headers).json()
-    headers = {"Content-Type": "application/json", "accept": "application/json", "Authorization": f"{response["token_type"]} {response["access_token"]}"}
+    headers = {
+        "Content-Type": "application/json",
+        "accept": "application/json",
+        "Authorization": f"{response['token_type']} {response['access_token']}",
+    }
     return headers
+
 
 @pytest.fixture(scope="session")
 def client():
@@ -74,7 +83,9 @@ def test_create_repeated_user_type(client, headers):
 
 def test_view_valid_user_type(client, headers):
     existent_user = create_user_type("view_test_user")
-    existent_user_id = client.post("/user/type", json=existent_user, headers=headers).json()["id"]
+    existent_user_id = client.post(
+        "/user/type", json=existent_user, headers=headers
+    ).json()["id"]
 
     response = client.get(f"/user/type/{existent_user_id}", headers=headers)
     assert response.status_code == 200
@@ -90,14 +101,20 @@ def test_edit_valid_user_type(client, headers):
     to_edit = create_user_type("valid_user_type_name_for_edit_1")
     new_value = create_user_type("valid_user_type_name_for_edit_2")
 
-    existing_user_type_id = client.post("/user/type/", json=to_edit, headers=headers).json()["id"]
-    response = client.put(f"/user/type/{existing_user_type_id}", json=new_value, headers=headers)
+    existing_user_type_id = client.post(
+        "/user/type/", json=to_edit, headers=headers
+    ).json()["id"]
+    response = client.put(
+        f"/user/type/{existing_user_type_id}", json=new_value, headers=headers
+    )
     assert response.status_code == 200
 
 
 def test_edit_invalid_user_type(client, headers):
     type_to_edit = create_user_type("type_to_edit")
-    inserted_id = client.post("/user/type/", json=type_to_edit, headers=headers).json()["id"]
+    inserted_id = client.post("/user/type/", json=type_to_edit, headers=headers).json()[
+        "id"
+    ]
 
     content = create_user_type("")
     response = client.put(f"/user/type/{inserted_id}", json=content, headers=headers)
@@ -108,36 +125,52 @@ def test_edit_repeated_user_type(client, headers):
     mocked_type = create_user_type("mocked_type")
     existing_type = create_user_type("existing_type")
 
-    mocked_id = client.post("/user/type/", json=mocked_type, headers=headers).json()["id"]
+    mocked_id = client.post("/user/type/", json=mocked_type, headers=headers).json()[
+        "id"
+    ]
     client.post("/user/type/", json=existing_type, headers=headers)
 
-    response = client.put(f"/user/type/{mocked_id}", json=existing_type, headers=headers)
+    response = client.put(
+        f"/user/type/{mocked_id}", json=existing_type, headers=headers
+    )
     assert response.status_code == 400
+
 
 def test_edit_user_type_with_empty_body(client, headers):
     existing_type = create_user_type("empty_body_test")
-    existing_id = client.post("/user/type/", json=existing_type, headers=headers).json()["id"]
+    existing_id = client.post(
+        "/user/type/", json=existing_type, headers=headers
+    ).json()["id"]
 
     response = client.put(f"/user/type/{existing_id}", json={}, headers=headers)
     assert response.status_code == 422
 
+
 def test_edit_user_type_with_null_body(client, headers):
     existing_type = create_user_type("null_body_test")
-    existing_id = client.post("/user/type/", json=existing_type, headers=headers).json()["id"]
+    existing_id = client.post(
+        "/user/type/", json=existing_type, headers=headers
+    ).json()["id"]
 
     response = client.put(f"/user/type/{existing_id}", json=None, headers=headers)
     assert response.status_code == 422
 
+
 def test_delete_unused_user_type(client, headers):
     mocked_type = create_user_type("type_to_delete")
-    mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()["id"]
+    mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()[
+        "id"
+    ]
 
     response = client.delete(f"/user/type/{mocked_id}", headers=headers)
     assert response.status_code == 200
 
+
 def test_delete_nonexistent_user_type(client, headers):
     mocked_type = create_user_type("nonexistent_user_type")
-    mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()["id"]
+    mocked_id = client.post("/user/type", json=mocked_type, headers=headers).json()[
+        "id"
+    ]
 
     response = client.delete(f"/user/type/{mocked_id + 1999}", headers=headers)
     assert response.status_code == 200

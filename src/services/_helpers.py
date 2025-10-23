@@ -6,10 +6,7 @@ from src.infra.database.serializers import lines_to_dict
 
 
 def paginate(
-    query: str,
-    page: int,
-    rows_per_page: int,
-    sort: str | None
+    query: str, page: int, rows_per_page: int, sort: str | None
 ) -> dict[str, Any]:
     """
     Paginates the results of an SQL query.
@@ -29,10 +26,10 @@ def paginate(
 
     if page < 1:
         page = 1
-    
+
     if rows_per_page < 1:
         rows_per_page = 10
-    
+
     prev_page = page - 1
     if prev_page < 1:
         prev_page = None
@@ -55,13 +52,16 @@ def paginate(
 
             if raw_count is None:
                 return {"error": True, "message": "Não foi possível fazer a query"}
-            
+
             itens_count = raw_count[0]
 
             db.cursor.execute(query, (rows_per_page, offset))
 
             if db.cursor.description is None:
-                return {"error": True, "message": "Não foi possível retonar a descrição das colunas"}
+                return {
+                    "error": True,
+                    "message": "Não foi possível retonar a descrição das colunas",
+                }
 
             columns = [desc[0] for desc in db.cursor.description]
             lines = db.cursor.fetchall()
@@ -70,7 +70,7 @@ def paginate(
         return {"error": True, "message": "Database error"}
 
     pages_count = math.ceil(itens_count / rows_per_page)
-    
+
     if pages_count in [0, 1]:
         next_page = None
 
@@ -82,10 +82,11 @@ def paginate(
             "itens_per_page": rows_per_page,
             "prev": prev_page,
             "next": next_page,
-            "current": page
+            "current": page,
         },
-        "error": False
+        "error": False,
     }
+
 
 def fields_to_update(fields: dict[str, Any]) -> tuple[str, tuple[Any]]:
     """
@@ -95,7 +96,7 @@ def fields_to_update(fields: dict[str, Any]) -> tuple[str, tuple[Any]]:
         fields (dict[str, Any]): Dictionary where keys are column names and values are the new values to update.
 
     Returns:
-        output (tuple[str, tuple[Any]]): 
+        output (tuple[str, tuple[Any]]):
             - The first element is a formatted string for the SET clause, e.g., 'column1 = %s, column2 = %s'.
             - The second element is a tuple with the values to be used in the SQL statement.
     """
@@ -110,5 +111,5 @@ def fields_to_update(fields: dict[str, Any]) -> tuple[str, tuple[Any]]:
 
     for field in fields.keys():
         string_output += f"{field} = %s, "
- 
+
     return string_output[:-2], tuple(fields.values())

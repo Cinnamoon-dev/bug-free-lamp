@@ -1,7 +1,7 @@
 from src.infra.database.database import PgDatabase
 
 
-def retrieve_table_columns(table_name: str)-> list[str]:
+def retrieve_table_columns(table_name: str) -> list[str]:
     """
     Retrieves the list of column names for a given table from the PostgreSQL database.
 
@@ -20,7 +20,7 @@ def retrieve_table_columns(table_name: str)-> list[str]:
     with PgDatabase() as db:
         db.cursor.execute(
             "SELECT column_name FROM information_schema.columns WHERE table_name = %s",
-            (table_name,)
+            (table_name,),
         )
         columns = [row[0] for row in db.cursor.fetchall()]
 

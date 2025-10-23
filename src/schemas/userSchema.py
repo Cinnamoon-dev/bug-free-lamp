@@ -13,6 +13,7 @@ class UserAddSchema(BaseModel):
             raise ValueError("tipo_usuario_id deve ser >= 1.")
         return self
 
+
 class UserEditSchema(BaseModel):
     email: Optional[EmailStr] = None
     senha: Optional[str] = None

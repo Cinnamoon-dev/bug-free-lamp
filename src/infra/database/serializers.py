@@ -1,6 +1,6 @@
 from typing import Any
 
-        
+
 def line_to_dict(line: tuple[Any], columns: list[str]) -> dict[str, Any]:
     """
     Converts a single database row (tuple) into a dictionary mapping column names to values.
@@ -24,6 +24,7 @@ def line_to_dict(line: tuple[Any], columns: list[str]) -> dict[str, Any]:
         line_dict[column] = line[index]
 
     return line_dict
+
 
 def lines_to_dict(lines: list[tuple[Any]], columns: list[str]) -> list[dict[str, Any]]:
     """
