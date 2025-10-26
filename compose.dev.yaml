@@ -1,0 +1,38 @@
+networks:
+  back-net:
+
+services:
+  api:
+    container_name: sql-api
+    build:
+      dockerfile: ./Dockerfile
+      target: runtime
+    environment:
+      - DB_HOST=postgres_api
+      - DB_PASSWORD=1234
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_NAME=apitest
+    networks:
+      - back-net
+    depends_on:
+      postgres_api:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+  
+  postgres_api:
+    container_name: postgres_api
+    image: postgres:12.0-alpine
+    environment:
+      - POSTGRES_PASSWORD=1234
+      - POSTGRES_DB=apitest
+    expose: 
+      - 5432
+    networks:
+      - back-net
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 3s
+      timeout: 5s
+      retries: 3
