@@ -16,7 +16,7 @@ def get_current_user(token: token_dependency) -> dict[str, Any]:
     if not user_id:
         raise HTTPException(status_code=401, detail="Usuário não autorizado")
 
-    user = UserService().view(user_id)
+    user = UserService(PgDatabase()).view(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 

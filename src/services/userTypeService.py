@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from psycopg2.errors import UniqueViolation
 from fastapi.datastructures import QueryParams
 
-from src.infra.database.database import PgDatabase
+from src.infra.database.database import Database, PgDatabase
 from src.services import paginate, fields_to_update
 from src.infra.database import retrieve_table_columns
 from src.schemas.userTypeSchema import UserTypeSchema
@@ -12,7 +12,8 @@ from src.infra.database.serializers import line_to_dict
 
 
 class UserTypeService:
-    def __init__(self) -> None:
+    def __init__(self, database: Database) -> None:
+        self.database = database
         self.table: str = "tipo_usuario"
         self.columns: list[str] = retrieve_table_columns(self.table)
         try:
@@ -65,7 +66,7 @@ class UserTypeService:
         user_type = None
 
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(
                     f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s",
                     (user_type_id,),
@@ -83,7 +84,7 @@ class UserTypeService:
 
     def add(self, user_type: UserTypeSchema) -> int:
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(
                     f"INSERT INTO {self.table} (nome) VALUES (%s) RETURNING id",
                     (user_type.nome,),
@@ -125,7 +126,7 @@ class UserTypeService:
 
         set_fields, set_values = fields_to_update(user_type_dict)
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(
                     f"UPDATE {self.table} SET {set_fields} WHERE id = %s",
                     set_values + (user_type_id,),
@@ -142,7 +143,7 @@ class UserTypeService:
 
     def delete(self, user_type_id: int) -> None:
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(
                     f"DELETE FROM {self.table} WHERE id = %s", (user_type_id,)
                 )

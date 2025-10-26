@@ -3,7 +3,7 @@ from functools import reduce
 from fastapi import HTTPException
 from fastapi.datastructures import QueryParams
 
-from src.infra.database.database import PgDatabase
+from src.infra.database.database import Database
 from src.services import paginate, fields_to_update
 from src.infra.security.hashing import bcrypt_context
 from src.infra.database import retrieve_table_columns
@@ -12,7 +12,8 @@ from src.schemas.userSchema import UserAddSchema, UserEditSchema
 
 
 class UserService:
-    def __init__(self) -> None:
+    def __init__(self, database: Database) -> None:
+        self.database = database
         self.table = "usuario"
         self.columns = retrieve_table_columns(self.table)
         try:
@@ -70,7 +71,7 @@ class UserService:
         user = None
 
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(
                     f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s",
                     (user_id,),
@@ -90,7 +91,7 @@ class UserService:
         user = None
 
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(
                     f"SELECT {self.all_columns} FROM {self.table} WHERE email = %s",
                     (email,),
@@ -110,7 +111,7 @@ class UserService:
         senha = bcrypt_context.hash(user.senha)
 
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(
                     f"INSERT INTO {self.table} (email, senha, tipo_usuario_id) VALUES (%s, %s, %s) RETURNING id",
                     (user.email.lower(), senha, user.tipo_usuario_id),
@@ -150,7 +151,7 @@ class UserService:
 
         set_fields, set_values = fields_to_update(user_dict)
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(
                     f"UPDATE {self.table} SET {set_fields} WHERE id = %s",
                     set_values + (user_id,),
@@ -163,7 +164,7 @@ class UserService:
 
     def delete(self, user_id: int) -> None:
         try:
-            with PgDatabase() as db:
+            with self.database as db:
                 db.cursor.execute(f"DELETE FROM {self.table} WHERE id = %s", (user_id,))
                 db.connection.commit()
         except Exception:

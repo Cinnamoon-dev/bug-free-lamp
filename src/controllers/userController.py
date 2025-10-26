@@ -2,6 +2,7 @@ from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, Request
 
 from ._helpers import PermissionChecker
+from src.infra.database import PgDatabase
 from src.services.userService import UserService
 from src.schemas.userSchema import UserAddSchema, UserEditSchema
 
@@ -18,12 +19,12 @@ def user_all(
     show_fk_id: int | None = 1,
     perms=Depends(PermissionChecker("usuario-all")),
 ):
-    return UserService().all(request.query_params)
+    return UserService(PgDatabase()).all(request.query_params)
 
 
 @router.get("/{user_id:int}")
 def user_view(user_id: int, perms=Depends(PermissionChecker("usuario-view"))):
-    user = UserService().view(user_id)
+    user = UserService(PgDatabase()).view(user_id)
 
     if user is None:
         return JSONResponse(
@@ -36,7 +37,7 @@ def user_view(user_id: int, perms=Depends(PermissionChecker("usuario-view"))):
 
 @router.post("/")
 def user_add(user: UserAddSchema, perms=Depends(PermissionChecker("usuario-add"))):
-    inserted_id = UserService().add(user)
+    inserted_id = UserService(PgDatabase()).add(user)
     return JSONResponse(
         status_code=200,
         content={
@@ -51,7 +52,7 @@ def user_add(user: UserAddSchema, perms=Depends(PermissionChecker("usuario-add")
 def user_edit(
     user_id: int, user: UserEditSchema, perms=Depends(PermissionChecker("usuario-edit"))
 ):
-    UserService().edit(user_id, user)
+    UserService(PgDatabase()).edit(user_id, user)
     return JSONResponse(
         status_code=200, content={"error": False, "message": "User edited successfully"}
     )
@@ -59,7 +60,7 @@ def user_edit(
 
 @router.delete("/{user_id:int}")
 def user_delete(user_id: int, perms=Depends(PermissionChecker("usuario-delete"))):
-    UserService().delete(user_id)
+    UserService(PgDatabase()).delete(user_id)
     return JSONResponse(
         status_code=200,
         content={"error": False, "message": "User deleted successfully"},

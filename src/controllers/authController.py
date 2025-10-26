@@ -1,6 +1,7 @@
 from datetime import timedelta
 from fastapi import APIRouter, HTTPException, Header
 
+from src.infra.database.database import PgDatabase
 from src.services.userService import UserService
 from ._helpers import user_dependency, form_auth_dependency
 from src.infra.security.hashing import (
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/login")
 def login(form_data: form_auth_dependency):
     email = form_data.username.lower()
-    user = UserService().view_by_email(email)
+    user = UserService(PgDatabase()).view_by_email(email)
 
     if not user:
         raise HTTPException(
@@ -56,7 +57,7 @@ def refresh(refresh_token: str = Header(..., alias="X-Refresh-Token")):
     payload = decode_token(refresh_token, JWT_REFRESH_SECRET_KEY, [ALGORITHM])
     user_id = int(payload["sub"])
 
-    user = UserService().view(user_id)
+    user = UserService(PgDatabase()).view(user_id)
     if not user:
         raise HTTPException(
             status_code=401, detail={"message": "User not found", "error": True}
