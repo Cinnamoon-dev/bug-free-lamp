@@ -23,8 +23,13 @@ def user_all(
 
 
 @router.get("/{user_id:int}")
-def user_view(user_id: int, perms=Depends(PermissionChecker("usuario-view"))):
-    user = UserService(PgDatabase()).view(user_id)
+def user_view(
+    request: Request,
+    user_id: int,
+    show_fk_id: int | None = 1,
+    perms=Depends(PermissionChecker("usuario-view"))
+):
+    user = UserService(PgDatabase()).view_controller(user_id, request.query_params)
 
     if user is None:
         return JSONResponse(

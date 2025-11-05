@@ -87,6 +87,44 @@ class UserService:
 
         return user
 
+    def view_controller(self, user_id: int, query_params: QueryParams) -> dict[str, Any] | None:
+        show_fk_id = bool(int(query_params.get("show_fk_id", 1)))
+        user = None
+
+        if show_fk_id:
+            query = f"SELECT {self.all_columns} FROM {self.table} WHERE id = %s"
+        else:
+            query = f"""
+                SELECT u.id, u.email, u.senha, tu.nome as tipo_usuario
+                FROM {self.table} AS u
+                INNER JOIN tipo_usuario AS tu
+                ON u.tipo_usuario_id = tu.id
+                WHERE u.id = %s
+                LIMIT 1
+            """
+
+        try:
+            with self.database as db:
+                db.cursor.execute(
+                    query,
+                    (user_id,),
+                )
+                row = db.cursor.fetchone()
+        except Exception:
+            raise HTTPException(
+                status_code=500, detail={"error": True, "message": "Database error"}
+            )
+
+        if row is None:
+            return user
+
+        if show_fk_id:
+            user = line_to_dict(row, self.columns)
+        else:
+            user = line_to_dict(row, ["id", "email", "senha", "tipo_usuario"])
+
+        return user
+
     def view_by_email(self, email: str) -> dict[str, Any] | None:
         user = None
 

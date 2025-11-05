@@ -1,5 +1,5 @@
 from datetime import timedelta
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 
 from src.infra.database.database import PgDatabase
 from src.services.userService import UserService
@@ -81,5 +81,8 @@ def refresh(refresh_token: str = Header(..., alias="X-Refresh-Token")):
 
 
 @router.get("/me")
-def me(user: user_dependency):
+def me(request: Request, user: user_dependency, show_fk_id: int | None = 1):
+    if show_fk_id == 0:
+        return UserService(PgDatabase()).view_controller(user["id"], request.query_params)
+
     return user
