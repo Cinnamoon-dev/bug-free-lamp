@@ -11,7 +11,7 @@ token_dependency = Annotated[str | None, Depends(oauth2_bearer)]
 
 
 def get_token_from_cookie(request: Request) -> str:
-    auth_jwt = request.cookies.get("authorization")
+    auth_jwt = request.cookies.get("access_token")
 
     if auth_jwt is None:
         raise HTTPException(
