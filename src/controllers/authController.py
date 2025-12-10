@@ -1,5 +1,5 @@
 from datetime import timedelta
-from fastapi import APIRouter, HTTPException, Header, Request
+from fastapi import APIRouter, HTTPException, Header, Request, Response
 
 from src.infra.database.database import PgDatabase
 from src.services.userService import UserService
@@ -50,6 +50,93 @@ def login(form_data: form_auth_dependency):
         "refresh_token": refresh_token,
         "token_type": "Bearer",
     }
+
+
+@router.post("/login/cookie")
+def login_cookie(form_data: form_auth_dependency, response: Response):
+    email = form_data.username.lower()
+    user = UserService(PgDatabase()).view_by_email(email)
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail={"message": "Email or password incorrect.", "error": True},
+        )
+
+    if not bcrypt_context.verify(form_data.password, user["senha"]):
+        raise HTTPException(
+            status_code=401,
+            detail={"message": "Email or password incorrect.", "error": True},
+        )
+
+    access_token = create_token(
+        user["id"],
+        JWT_ACCESS_SECRET_KEY,
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+    refresh_token = create_token(
+        user["id"], JWT_REFRESH_SECRET_KEY, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    )
+
+    response.set_cookie(
+        "access_token",
+        access_token
+    )
+
+    response.set_cookie(
+        "refresh_token",
+        refresh_token
+    )
+
+    response.set_cookie(
+        "token_type",
+        "Bearer"
+    )
+
+    return {"message": "Login successfull"}
+
+
+@router.post("/refresh/cookie")
+def refresh_cookie(
+    response: Response,
+    refresh_token: str = Header(..., alias="refresh_token")
+):
+    payload = decode_token(refresh_token, JWT_REFRESH_SECRET_KEY, [ALGORITHM])
+    user_id = int(payload["sub"])
+
+    user = UserService(PgDatabase()).view(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=401, detail={"message": "User not found", "error": True}
+        )
+
+    new_access_token = create_token(
+        payload["sub"],
+        JWT_ACCESS_SECRET_KEY,
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+    new_refresh_token = create_token(
+        payload["sub"],
+        JWT_REFRESH_SECRET_KEY,
+        timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+    )
+
+    response.set_cookie(
+        "access_token",
+        new_access_token
+    )
+
+    response.set_cookie(
+        "refresh_token",
+        new_refresh_token
+    )
+
+    response.set_cookie(
+        "token_type",
+        "Bearer"
+    )
+
+    return {"message": "Token refreshed successfully"}
 
 
 @router.post("/refresh")

@@ -1,16 +1,30 @@
 from typing import Annotated, Any
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from src.services.userService import UserService
 from src.infra.database.database import PgDatabase
 from src.infra.security.hashing import ALGORITHM, JWT_ACCESS_SECRET_KEY, decode_token
 
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/login")
-token_dependency = Annotated[str, Depends(oauth2_bearer)]
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+token_dependency = Annotated[str | None, Depends(oauth2_bearer)]
 
 
-def get_current_user(token: token_dependency) -> dict[str, Any]:
+def get_token_from_cookie(request: Request) -> str:
+    auth_jwt = request.cookies.get("access_token")
+
+    if auth_jwt is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Not authenticated"
+        )
+
+    return auth_jwt
+
+def get_current_user(token: token_dependency, request: Request) -> dict[str, Any]:
+    if token is None:
+        token = get_token_from_cookie(request)
+
     payload: dict[str, Any] = decode_token(token, JWT_ACCESS_SECRET_KEY, [ALGORITHM])
     user_id = payload.get("sub")
     if not user_id:
