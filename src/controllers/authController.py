@@ -93,7 +93,50 @@ def login_cookie(form_data: form_auth_dependency, response: Response):
         "Bearer"
     )
 
-    return {"message": "Login efetuado com sucesso"}
+    return {"message": "Login successfull"}
+
+
+@router.post("/refresh/cookie")
+def refresh_cookie(
+    response: Response,
+    refresh_token: str = Header(..., alias="refresh_token")
+):
+    payload = decode_token(refresh_token, JWT_REFRESH_SECRET_KEY, [ALGORITHM])
+    user_id = int(payload["sub"])
+
+    user = UserService(PgDatabase()).view(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=401, detail={"message": "User not found", "error": True}
+        )
+
+    new_access_token = create_token(
+        payload["sub"],
+        JWT_ACCESS_SECRET_KEY,
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+    new_refresh_token = create_token(
+        payload["sub"],
+        JWT_REFRESH_SECRET_KEY,
+        timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+    )
+
+    response.set_cookie(
+        "access_token",
+        new_access_token
+    )
+
+    response.set_cookie(
+        "refresh_token",
+        new_refresh_token
+    )
+
+    response.set_cookie(
+        "token_type",
+        "Bearer"
+    )
+
+    return {"message": "Token refreshed successfully"}
 
 
 @router.post("/refresh")
